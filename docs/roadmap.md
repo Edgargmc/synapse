@@ -2,9 +2,13 @@
 
 ## Milestone 0: Walking Skeleton
 
+Estado: completado.
+
 Validar la comunicacion completa entre frontend, API y PostgreSQL con una experiencia minima visible desde el navegador.
 
 ## Milestone 1: Identidad futura con proposito
+
+Estado: implementado y en seguimiento.
 
 Permitir definir la persona que el usuario quiere llegar a ser y el sentido de esa direccion.
 

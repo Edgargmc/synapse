@@ -1,0 +1,75 @@
+{
+  "id": "ff3a9972-510a-451d-a8c9-bbe5ecdb40ff",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.future_identities": {
+      "name": "future_identities",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "statement": {
+          "name": "statement",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "purpose": {
+          "name": "purpose",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "future_identities_statement_length_check": {
+          "name": "future_identities_statement_length_check",
+          "value": "char_length(trim(\"future_identities\".\"statement\")) between 1 and 160"
+        },
+        "future_identities_purpose_length_check": {
+          "name": "future_identities_purpose_length_check",
+          "value": "char_length(trim(\"future_identities\".\"purpose\")) between 1 and 2000"
+        },
+        "future_identities_updated_at_check": {
+          "name": "future_identities_updated_at_check",
+          "value": "\"future_identities\".\"updated_at\" >= \"future_identities\".\"created_at\""
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

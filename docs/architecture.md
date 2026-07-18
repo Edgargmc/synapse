@@ -1,6 +1,6 @@
 # Architecture
 
-## Arquitectura actual del Walking Skeleton
+## Arquitectura actual
 
 El sistema actual valida la comunicacion completa entre cuatro piezas:
 
@@ -11,25 +11,34 @@ El sistema actual valida la comunicacion completa entre cuatro piezas:
 
 El frontend consulta `GET /health` de la API y la API ejecuta una consulta real `SELECT 1` sobre PostgreSQL antes de responder. La respuesta expone `status`, `services.database` y un `timestamp` en formato ISO 8601 UTC generado por cada request. El frontend valida ese contrato en runtime antes de renderizarlo, distingue entre API no accesible y respuesta invalida, y trata un HTTP `503` con payload valido como un estado degradado visible. Cuando la conexion a la base falla, la API responde un estado degradado y usa HTTP `503` sin exponer credenciales ni detalles internos.
 
+Milestone 1 agrega el primer corte vertical de negocio:
+
+- `POST /future-identities`
+- `GET /future-identities`
+
+La API implementa el feature `future-identity` con fronteras explicitas:
+
+- `domain`: entidad inmutable `FutureIdentity` y validaciones de dominio.
+- `application`: puertos y casos de uso sin dependencias de NestJS, HTTP, Drizzle ni PostgreSQL.
+- `infrastructure`: adaptadores productivos para reloj, UUID y persistencia con Drizzle sobre el `Pool` existente de `pg`.
+- `presentation`: controller HTTP, DTOs y validacion estructural con Zod.
+
+La persistencia usa Drizzle ORM y Drizzle Kit solo en infraestructura. Las migraciones son explicitas y no se ejecutan automaticamente al iniciar la API.
+
 ## Decisiones implementadas
 
 - Monorepo simple con `pnpm workspaces`.
 - `Next.js` con App Router, TypeScript, Tailwind CSS y ESLint.
-- `NestJS` con TypeScript y una conexion minima a PostgreSQL mediante `pg`.
+- `NestJS` con TypeScript y una conexion a PostgreSQL mediante `pg`.
+- `Drizzle ORM` y `Drizzle Kit` para persistencia y migraciones del feature `future-identity`.
 - Validacion tipada de variables de entorno con `zod` en el backend.
 - `Docker Compose` solo para PostgreSQL, sin dockerizar frontend ni backend.
-
-## Por que no se usa un ORM todavia
-
-Para este incremento solo hace falta verificar conectividad real con PostgreSQL. Incorporar un ORM ahora agregaria configuracion, convenciones y superficie tecnica que todavia no aportan valor porque aun no existen entidades, tablas, migraciones ni reglas de negocio implementadas. `pg` permite resolver el health check de forma minima y deja abierta una evolucion posterior hacia un ORM si el dominio empieza a justificarlo.
 
 ## Que se dejo deliberadamente fuera
 
 - Autenticacion.
 - Integracion con IA.
 - Grafo visual.
-- Entidades y tablas de negocio.
-- Migraciones.
 - Redis, colas, mensajeria o microservicios.
 - DDD y Clean Architecture completas.
 - Librerias compartidas o capas vacias sin uso real.

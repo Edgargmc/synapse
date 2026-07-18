@@ -1,6 +1,9 @@
 # Synapse
 
-Walking Skeleton inicial de Synapse para validar la comunicacion completa entre navegador, frontend en Next.js, API en NestJS y PostgreSQL.
+Synapse implementa hoy dos incrementos funcionales:
+
+- Milestone 0: Walking Skeleton entre navegador, frontend, API y PostgreSQL.
+- Milestone 1: creacion y listado de identidades futuras con proposito, persistidas en PostgreSQL.
 
 ## Requisitos previos
 
@@ -59,6 +62,12 @@ docker compose ps
 pnpm install
 ```
 
+## Migrar base de datos
+
+```bash
+pnpm db:migrate
+```
+
 ## Ejecutar frontend y backend
 
 Ejecutar ambos procesos:
@@ -84,7 +93,28 @@ pnpm dev:api
 - Frontend: [http://localhost:3000](http://localhost:3000)
 - API: [http://localhost:3001](http://localhost:3001)
 - Health check: [http://localhost:3001/health](http://localhost:3001/health)
+- Future identities: [http://localhost:3001/future-identities](http://localhost:3001/future-identities)
 - PostgreSQL: `localhost:5432`
+
+## Flujo local recomendado
+
+```bash
+docker compose up -d
+pnpm db:migrate
+pnpm dev
+```
+
+## Scripts de base de datos
+
+Desde la raiz:
+
+```bash
+pnpm db:generate
+pnpm db:migrate
+pnpm db:studio
+```
+
+Los scripts usan `DATABASE_URL` desde el `.env` raiz mediante `dotenv-cli`.
 
 ## Build, lint, tests y typecheck
 
@@ -98,6 +128,7 @@ pnpm typecheck
 Estado actual de `pnpm test`:
 
 - Ejecuta tests automatizados reales del backend sobre `HealthService` y `HealthController`.
+- Ejecuta tests automatizados del feature `future-identity` sobre dominio, casos de uso y controller.
 - El paquete `apps/web` todavia no tiene tests automatizados y hoy solo informa esa ausencia sin fallar.
 
 Comportamiento actual del frontend frente a `GET /health`:
@@ -105,6 +136,13 @@ Comportamiento actual del frontend frente a `GET /health`:
 - Valida en runtime que la respuesta tenga `status`, `services.database` y `timestamp` ISO 8601.
 - Distingue entre API no accesible y respuesta invalida.
 - Muestra un `503` con payload valido como estado degradado, no como falla de conectividad.
+
+Comportamiento actual del frontend frente a `future-identities`:
+
+- Permite crear una identidad futura con `statement` y `purpose`.
+- Valida en runtime las responses de creacion, listado y error.
+- Recarga la coleccion despues de crear.
+- Muestra las identidades persistidas y su estado vacio inicial.
 
 ## Detener servicios
 
@@ -128,7 +166,9 @@ docker compose down -v
 
 - `pnpm: command not found`: ejecutar `corepack enable` y `corepack prepare pnpm@10.13.1 --activate`.
 - La API falla al iniciar: verificar que exista `.env` y que `DATABASE_URL` sea valida.
+- `pnpm db:migrate` falla: verificar que PostgreSQL este levantado y que `DATABASE_URL` apunte al puerto correcto.
 - `/health` responde `503`: PostgreSQL no esta disponible o todavia no termino su healthcheck.
 - El frontend no muestra estado: verificar `NEXT_PUBLIC_API_BASE_URL` y que la API este corriendo en `http://localhost:3001`.
 - El frontend informa respuesta invalida: revisar que `GET /health` devuelva JSON valido con `status`, `services.database` y `timestamp` ISO 8601.
+- El frontend no puede guardar identidades: verificar `POST /future-identities`, la migracion aplicada y que la API este corriendo.
 - `docker compose up -d` falla porque `5432` ya esta en uso: ajustar `POSTGRES_PORT` y `DATABASE_URL` en `.env` a un puerto libre, por ejemplo `5433`.
