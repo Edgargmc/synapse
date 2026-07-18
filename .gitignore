@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Build output
+.next/
+dist/
+out/
+coverage/
+*.tsbuildinfo
+
+# IDEs
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Operating system
+.DS_Store

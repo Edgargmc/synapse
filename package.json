@@ -1,0 +1,21 @@
+{
+  "name": "synapse",
+  "private": true,
+  "packageManager": "pnpm@10.13.1",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "dev": "concurrently -k --names web,api --prefix-colors cyan,magenta \"pnpm dev:web\" \"pnpm dev:api\"",
+    "dev:web": "dotenv -e .env -- pnpm --filter @synapse/web dev",
+    "dev:api": "dotenv -e .env -- pnpm --filter @synapse/api dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "dotenv-cli": "^8.0.0"
+  }
+}
