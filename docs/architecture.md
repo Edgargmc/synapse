@@ -9,7 +9,7 @@ El sistema actual valida la comunicacion completa entre cuatro piezas:
 - API en NestJS (`apps/api`).
 - PostgreSQL en Docker Compose.
 
-El frontend consulta `GET /health` de la API y la API ejecuta una consulta real `SELECT 1` sobre PostgreSQL antes de responder. La respuesta expone `status`, `services.database` y un `timestamp` en formato ISO 8601 UTC generado por cada request. Cuando la conexion a la base falla, la API responde un estado degradado y usa HTTP `503` sin exponer credenciales ni detalles internos.
+El frontend consulta `GET /health` de la API y la API ejecuta una consulta real `SELECT 1` sobre PostgreSQL antes de responder. La respuesta expone `status`, `services.database` y un `timestamp` en formato ISO 8601 UTC generado por cada request. El frontend valida ese contrato en runtime antes de renderizarlo, distingue entre API no accesible y respuesta invalida, y trata un HTTP `503` con payload valido como un estado degradado visible. Cuando la conexion a la base falla, la API responde un estado degradado y usa HTTP `503` sin exponer credenciales ni detalles internos.
 
 ## Decisiones implementadas
 

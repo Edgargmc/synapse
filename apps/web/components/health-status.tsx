@@ -2,13 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-type HealthResponse = {
-  status: 'ok' | 'degraded';
-  services: {
-    database: 'up' | 'down';
-  };
-  timestamp: string;
-};
+import { HealthResponse, isHealthResponse } from '../lib/health-response';
 
 type State =
   | { kind: 'loading' }
@@ -44,18 +38,14 @@ export function HealthStatus() {
     let cancelled = false;
 
     async function loadHealth() {
+      let response: Response;
+
       try {
-        const response = await fetch(`${API_BASE_URL}/health`, {
+        response = await fetch(`${API_BASE_URL}/health`, {
           headers: {
             Accept: 'application/json',
           },
         });
-
-        const payload = (await response.json()) as HealthResponse;
-
-        if (!cancelled) {
-          setState({ kind: 'ready', data: payload });
-        }
       } catch {
         if (!cancelled) {
           setState({
@@ -63,6 +53,38 @@ export function HealthStatus() {
             message: 'No se pudo conectar con la API. Verifica que el backend este iniciado.',
           });
         }
+
+        return;
+      }
+
+      let payload: unknown;
+
+      try {
+        payload = await response.json();
+      } catch {
+        if (!cancelled) {
+          setState({
+            kind: 'error',
+            message: 'La API respondio un body invalido para el health check.',
+          });
+        }
+
+        return;
+      }
+
+      if (!isHealthResponse(payload)) {
+        if (!cancelled) {
+          setState({
+            kind: 'error',
+            message: 'La API respondio un contrato invalido para el health check.',
+          });
+        }
+
+        return;
+      }
+
+      if (!cancelled) {
+        setState({ kind: 'ready', data: payload });
       }
     }
 
@@ -124,7 +146,12 @@ export function HealthStatus() {
       <div className="mt-6 min-h-14 rounded-2xl border border-border bg-background/40 p-4 text-sm text-muted">
         {state.kind === 'loading' && 'Consultando el health check real de la API...'}
         {state.kind === 'error' && state.message}
-        {state.kind === 'ready' && `Ultima verificacion: ${new Date(state.data.timestamp).toLocaleString('es-AR')}`}
+        {state.kind === 'ready' &&
+          state.data.status === 'degraded' &&
+          'La API esta disponible, pero reporta un estado degradado en PostgreSQL.'}
+        {state.kind === 'ready' &&
+          state.data.status === 'ok' &&
+          `Ultima verificacion: ${new Date(state.data.timestamp).toLocaleString('es-AR')}`}
       </div>
     </section>
   );

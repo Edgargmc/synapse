@@ -100,6 +100,12 @@ Estado actual de `pnpm test`:
 - Ejecuta tests automatizados reales del backend sobre `HealthService` y `HealthController`.
 - El paquete `apps/web` todavia no tiene tests automatizados y hoy solo informa esa ausencia sin fallar.
 
+Comportamiento actual del frontend frente a `GET /health`:
+
+- Valida en runtime que la respuesta tenga `status`, `services.database` y `timestamp` ISO 8601.
+- Distingue entre API no accesible y respuesta invalida.
+- Muestra un `503` con payload valido como estado degradado, no como falla de conectividad.
+
 ## Detener servicios
 
 Detener frontend y backend iniciados con `pnpm dev`:
@@ -124,4 +130,5 @@ docker compose down -v
 - La API falla al iniciar: verificar que exista `.env` y que `DATABASE_URL` sea valida.
 - `/health` responde `503`: PostgreSQL no esta disponible o todavia no termino su healthcheck.
 - El frontend no muestra estado: verificar `NEXT_PUBLIC_API_BASE_URL` y que la API este corriendo en `http://localhost:3001`.
+- El frontend informa respuesta invalida: revisar que `GET /health` devuelva JSON valido con `status`, `services.database` y `timestamp` ISO 8601.
 - `docker compose up -d` falla porque `5432` ya esta en uso: ajustar `POSTGRES_PORT` y `DATABASE_URL` en `.env` a un puerto libre, por ejemplo `5433`.
