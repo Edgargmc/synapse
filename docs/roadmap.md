@@ -14,6 +14,8 @@ Permitir definir la persona que el usuario quiere llegar a ser y el sentido de e
 
 ## Milestone 2: Meta y nodos iniciales
 
+Estado: en progreso.
+
 Permitir crear una meta inicial y descomponerla en nodos accionables relacionados.
 
 ## Milestone 3: Registrar una reflexion

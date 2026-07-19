@@ -1,4 +1,4 @@
-import { desc } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
 import { FutureIdentityRepository } from '../../application/ports/future-identity.repository';
@@ -35,5 +35,25 @@ export class DrizzleFutureIdentityRepository implements FutureIdentityRepository
         updatedAt: row.updatedAt,
       }),
     );
+  }
+
+  async findById(id: string): Promise<FutureIdentity | null> {
+    const [row] = await this.db
+      .select()
+      .from(futureIdentities)
+      .where(eq(futureIdentities.id, id))
+      .limit(1);
+
+    if (!row) {
+      return null;
+    }
+
+    return FutureIdentity.restore({
+      id: row.id,
+      statement: row.statement,
+      purpose: row.purpose,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    });
   }
 }

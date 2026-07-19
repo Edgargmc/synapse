@@ -1,9 +1,10 @@
 # Synapse
 
-Synapse implementa hoy dos incrementos funcionales:
+Synapse implementa hoy tres incrementos funcionales:
 
 - Milestone 0: Walking Skeleton entre navegador, frontend, API y PostgreSQL.
 - Milestone 1: creacion y listado de identidades futuras con proposito, persistidas en PostgreSQL.
+- Milestone 2A: creacion y listado de metas vinculadas a una identidad futura.
 
 ## Requisitos previos
 
@@ -94,6 +95,7 @@ pnpm dev:api
 - API: [http://localhost:3001](http://localhost:3001)
 - Health check: [http://localhost:3001/health](http://localhost:3001/health)
 - Future identities: [http://localhost:3001/future-identities](http://localhost:3001/future-identities)
+- Goals by identity: `http://localhost:3001/future-identities/:futureIdentityId/goals`
 - PostgreSQL: `localhost:5432`
 
 ## Flujo local recomendado
@@ -129,6 +131,8 @@ Estado actual de `pnpm test`:
 
 - Ejecuta tests automatizados reales del backend sobre `HealthService` y `HealthController`.
 - Ejecuta tests automatizados del feature `future-identity` sobre dominio, casos de uso y controller.
+- Ejecuta tests automatizados del feature `goal` sobre dominio, casos de uso y controller.
+- Ejecuta tests e2e del `ApiExceptionFilter` para JSON malformado, ruta inexistente, errores internos y `GET /health`.
 - El paquete `apps/web` todavia no tiene tests automatizados y hoy solo informa esa ausencia sin fallar.
 
 Comportamiento actual del frontend frente a `GET /health`:
@@ -143,6 +147,14 @@ Comportamiento actual del frontend frente a `future-identities`:
 - Valida en runtime las responses de creacion, listado y error.
 - Recarga la coleccion despues de crear.
 - Muestra las identidades persistidas y su estado vacio inicial.
+
+Comportamiento actual del frontend frente a `goals`:
+
+- Selecciona inicialmente la primera identidad futura disponible.
+- Carga solo las metas de la identidad seleccionada.
+- Permite abrir un formulario para agregar una transformacion concreta y su proposito.
+- Valida en runtime las responses de creacion, listado y error.
+- Recarga las metas despues de crear y conserva los datos tras recargar la aplicacion.
 
 ## Detener servicios
 
@@ -168,7 +180,9 @@ docker compose down -v
 - La API falla al iniciar: verificar que exista `.env` y que `DATABASE_URL` sea valida.
 - `pnpm db:migrate` falla: verificar que PostgreSQL este levantado y que `DATABASE_URL` apunte al puerto correcto.
 - `/health` responde `503`: PostgreSQL no esta disponible o todavia no termino su healthcheck.
+- una ruta inexistente devuelve `404 RESOURCE_NOT_FOUND`: verificar la URL del endpoint.
 - El frontend no muestra estado: verificar `NEXT_PUBLIC_API_BASE_URL` y que la API este corriendo en `http://localhost:3001`.
 - El frontend informa respuesta invalida: revisar que `GET /health` devuelva JSON valido con `status`, `services.database` y `timestamp` ISO 8601.
 - El frontend no puede guardar identidades: verificar `POST /future-identities`, la migracion aplicada y que la API este corriendo.
+- El frontend no puede guardar metas: verificar que exista una identidad seleccionada y que `POST /future-identities/:futureIdentityId/goals` responda correctamente.
 - `docker compose up -d` falla porque `5432` ya esta en uso: ajustar `POSTGRES_PORT` y `DATABASE_URL` en `.env` a un puerto libre, por ejemplo `5433`.

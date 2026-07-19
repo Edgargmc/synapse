@@ -25,12 +25,26 @@ La API implementa el feature `future-identity` con fronteras explicitas:
 
 La persistencia usa Drizzle ORM y Drizzle Kit solo en infraestructura. Las migraciones son explicitas y no se ejecutan automaticamente al iniciar la API.
 
+Milestone 2A agrega el segundo corte vertical de negocio, todavia sin nodos ni grafo:
+
+- `POST /future-identities/:futureIdentityId/goals`
+- `GET /future-identities/:futureIdentityId/goals`
+
+La API implementa el feature `goal` con la misma separacion por fronteras:
+
+- `domain`: entidad inmutable `Goal` y validaciones de dominio.
+- `application`: casos de uso que verifican primero la existencia de `FutureIdentity`.
+- `infrastructure`: schema, repositorio Drizzle y migracion incremental sobre PostgreSQL.
+- `presentation`: controller HTTP, DTOs y validacion estructural con Zod para body y params.
+
+Los puertos `Clock` e `IdGenerator` se movieron a una ubicacion comun para reutilizarse entre `future-identity` y `goal`. El `ApiExceptionFilter` global ahora distingue `400 INVALID_REQUEST`, `404 RESOURCE_NOT_FOUND` para rutas inexistentes y `500 INTERNAL_ERROR` para errores no controlados, sin exponer detalles internos.
+
 ## Decisiones implementadas
 
 - Monorepo simple con `pnpm workspaces`.
 - `Next.js` con App Router, TypeScript, Tailwind CSS y ESLint.
 - `NestJS` con TypeScript y una conexion a PostgreSQL mediante `pg`.
-- `Drizzle ORM` y `Drizzle Kit` para persistencia y migraciones del feature `future-identity`.
+- `Drizzle ORM` y `Drizzle Kit` para persistencia y migraciones de `future-identity` y `goal`.
 - Validacion tipada de variables de entorno con `zod` en el backend.
 - `Docker Compose` solo para PostgreSQL, sin dockerizar frontend ni backend.
 

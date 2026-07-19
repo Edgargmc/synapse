@@ -1,7 +1,7 @@
+import { Clock } from '../../../common/application/ports/clock';
+import { IdGenerator } from '../../../common/application/ports/id-generator';
 import { FutureIdentity } from '../../domain/future-identity';
 import { DomainValidationError } from '../../domain/future-identity.errors';
-import { Clock } from '../ports/clock';
-import { IdGenerator } from '../ports/id-generator';
 import { FutureIdentityRepository } from '../ports/future-identity.repository';
 import { CreateFutureIdentity } from './create-future-identity';
 
@@ -13,6 +13,7 @@ describe('CreateFutureIdentity', () => {
     const repository: FutureIdentityRepository = {
       save: jest.fn().mockResolvedValue(undefined),
       findAll: jest.fn().mockResolvedValue([]),
+      findById: jest.fn().mockResolvedValue(null),
     };
     const idGenerator: IdGenerator = {
       generate: jest.fn().mockReturnValue(generatedId),

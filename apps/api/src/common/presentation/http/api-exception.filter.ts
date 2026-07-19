@@ -10,6 +10,7 @@ import { Response } from 'express';
 import {
   internalErrorResponse,
   invalidRequestErrorResponse,
+  resourceNotFoundErrorResponse,
 } from './api-error-response';
 
 @Catch()
@@ -26,6 +27,11 @@ export class ApiExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof HttpException) {
       const status = exception.getStatus();
+
+      if (status === 404) {
+        response.status(404).json(resourceNotFoundErrorResponse());
+        return;
+      }
 
       if (status < 500) {
         response.status(status).json(internalErrorResponse());

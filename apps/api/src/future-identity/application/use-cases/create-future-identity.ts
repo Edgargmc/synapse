@@ -1,6 +1,6 @@
+import { Clock } from '../../../common/application/ports/clock';
+import { IdGenerator } from '../../../common/application/ports/id-generator';
 import { FutureIdentity } from '../../domain/future-identity';
-import { Clock } from '../ports/clock';
-import { IdGenerator } from '../ports/id-generator';
 import { FutureIdentityRepository } from '../ports/future-identity.repository';
 
 export const CREATE_FUTURE_IDENTITY = Symbol('CREATE_FUTURE_IDENTITY');

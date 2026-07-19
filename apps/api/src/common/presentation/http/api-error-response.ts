@@ -7,6 +7,15 @@ export function invalidRequestErrorResponse() {
   };
 }
 
+export function resourceNotFoundErrorResponse() {
+  return {
+    error: {
+      code: 'RESOURCE_NOT_FOUND',
+      message: 'El recurso solicitado no existe.',
+    },
+  };
+}
+
 export function internalErrorResponse() {
   return {
     error: {

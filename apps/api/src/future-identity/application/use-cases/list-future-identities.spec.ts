@@ -16,6 +16,7 @@ describe('ListFutureIdentities', () => {
     const repository: FutureIdentityRepository = {
       save: jest.fn().mockResolvedValue(undefined),
       findAll: jest.fn().mockResolvedValue(identities),
+      findById: jest.fn().mockResolvedValue(null),
     };
     const useCase = new ListFutureIdentities(repository);
 
@@ -26,6 +27,7 @@ describe('ListFutureIdentities', () => {
     const repository: FutureIdentityRepository = {
       save: jest.fn().mockResolvedValue(undefined),
       findAll: jest.fn().mockResolvedValue([]),
+      findById: jest.fn().mockResolvedValue(null),
     };
     const useCase = new ListFutureIdentities(repository);
 
@@ -36,6 +38,7 @@ describe('ListFutureIdentities', () => {
     const repository: FutureIdentityRepository = {
       save: jest.fn().mockResolvedValue(undefined),
       findAll: jest.fn().mockResolvedValue([]),
+      findById: jest.fn().mockResolvedValue(null),
     };
     const useCase = new ListFutureIdentities(repository);
 
