@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-Milestone 2B implementa tres entidades reales de Synapse: `FutureIdentity`, `Goal` y `AttentionNode`.
+Milestone 2B implementa tres entidades reales de Synapse: `FutureIdentity`, `Goal` y `AttentionNode`. Milestone 2C agrega una proyeccion de lectura del grafo de evolucion basada en esas entidades y sus relaciones confirmadas.
 
 ## FutureIdentity implementada
 
@@ -80,6 +80,18 @@ Relaciones implementadas:
 - una `AttentionNode` queda preparada para poder vincularse en el futuro con varias `Goal`;
 - la relacion actual se persiste en una tabla intermedia `goal_attention_nodes`.
 
+## Evolution Graph implementado
+
+El grafo de evolucion es una proyeccion de lectura agnostica de la interfaz. Expone:
+
+- un nodo `future_identity` para la identidad solicitada;
+- nodos `goal` para sus metas;
+- nodos `attention_node` para las areas vinculadas a esas metas;
+- relaciones `has_goal` entre identidad y metas;
+- relaciones `has_attention_node` entre metas y areas de atencion.
+
+Estas relaciones son estructurales y confirmadas porque derivan de datos persistidos. No representan conexiones inferidas, sugerencias de IA, pesos, progreso, dependencias semanticas entre nodos ni layout visual.
+
 ## Flujo conceptual conocido
 
 Identidad futura -> Meta -> Nodos -> Acciones -> Avances -> Impacto -> Reflexiones -> Aprendizaje -> Evolucion
@@ -92,4 +104,4 @@ Identidad futura -> Meta -> Nodos -> Acciones -> Avances -> Impacto -> Reflexion
 
 ## Nota explicita
 
-El modelo sigue siendo incremental. Synapse ya persiste identidades futuras, metas y areas de atencion vinculadas a metas, pero todavia no implementa React Flow, conexiones nodo-nodo, progreso, reflexiones ni estructuras mas ricas de dominio.
+El modelo sigue siendo incremental. Synapse ya persiste identidades futuras, metas y areas de atencion vinculadas a metas, y ya expone una proyeccion backend del grafo estructural confirmado. Todavia no implementa React Flow, conexiones nodo-nodo inferidas o confirmadas, progreso, reflexiones ni estructuras mas ricas de dominio.

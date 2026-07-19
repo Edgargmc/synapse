@@ -55,12 +55,25 @@ La persistencia de `AttentionNode` usa una transaccion Drizzle real dentro del r
 
 En frontend, la experiencia sigue siendo un workspace unico cliente, pero se refactorizo en paneles presentacionales para identidad, meta y area de atencion. La coordinacion principal permanece centralizada, se cargan solo metas de la identidad seleccionada y solo nodos de la meta seleccionada, y se evita que respuestas viejas sobrescriban el estado actual mediante identificadores de request.
 
+Milestone 2C agrega el modelo de lectura backend para consultar el grafo de evolucion de una identidad futura:
+
+- `GET /future-identities/:futureIdentityId/evolution-graph`
+
+La API implementa el feature `evolution-graph` como una proyeccion de lectura, no como un agregado de dominio nuevo:
+
+- `application`: puerto `EvolutionGraphQueryPort` y query `GetEvolutionGraph`, sin dependencias de NestJS, Drizzle, PostgreSQL ni librerias visuales.
+- `infrastructure`: adapter Drizzle que arma la proyeccion desde `future_identities`, `goals`, `attention_nodes` y `goal_attention_nodes`.
+- `presentation`: controller HTTP y validacion Zod del parametro `futureIdentityId`.
+
+El contrato devuelve nodos y relaciones estructurales confirmadas de Synapse. Es agnostico de la UI: no incluye coordenadas, estilos, colores, handles, propiedades de React Flow ni persistencia de layout.
+
 ## Decisiones implementadas
 
 - Monorepo simple con `pnpm workspaces`.
 - `Next.js` con App Router, TypeScript, Tailwind CSS y ESLint.
 - `NestJS` con TypeScript y una conexion a PostgreSQL mediante `pg`.
 - `Drizzle ORM` y `Drizzle Kit` para persistencia y migraciones de `future-identity`, `goal` y `attention-node`.
+- Proyeccion de lectura `evolution-graph` para exponer el grafo estructural confirmado sin acoplarse al canvas visual.
 - Validacion tipada de variables de entorno con `zod` en el backend.
 - `Docker Compose` solo para PostgreSQL, sin dockerizar frontend ni backend.
 
