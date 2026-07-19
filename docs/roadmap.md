@@ -16,7 +16,7 @@ Permitir definir la persona que el usuario quiere llegar a ser y el sentido de e
 
 Estado: en progreso.
 
-Permitir crear una meta inicial y descomponerla en nodos accionables relacionados.
+Permitir crear una meta inicial y descomponerla en nodos accionables relacionados. El milestone ya cubre metas persistidas y areas de atencion vinculadas a una meta, pero sigue en progreso porque todavia falta React Flow y el grafo visual.
 
 ## Milestone 3: Registrar una reflexion
 

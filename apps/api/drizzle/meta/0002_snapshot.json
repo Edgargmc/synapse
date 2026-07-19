@@ -1,0 +1,305 @@
+{
+  "id": "4e12c9ec-ea38-49a2-acd1-84fa06a92837",
+  "prevId": "612f4294-9a9a-43ca-9002-1efa91e04369",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.attention_nodes": {
+      "name": "attention_nodes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "attention_nodes_name_length_check": {
+          "name": "attention_nodes_name_length_check",
+          "value": "char_length(trim(\"attention_nodes\".\"name\")) between 1 and 100"
+        },
+        "attention_nodes_description_length_check": {
+          "name": "attention_nodes_description_length_check",
+          "value": "\"attention_nodes\".\"description\" is null or char_length(trim(\"attention_nodes\".\"description\")) between 1 and 1000"
+        },
+        "attention_nodes_updated_at_check": {
+          "name": "attention_nodes_updated_at_check",
+          "value": "\"attention_nodes\".\"updated_at\" >= \"attention_nodes\".\"created_at\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.goal_attention_nodes": {
+      "name": "goal_attention_nodes",
+      "schema": "",
+      "columns": {
+        "goal_id": {
+          "name": "goal_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "attention_node_id": {
+          "name": "attention_node_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "goal_attention_nodes_attention_node_id_idx": {
+          "name": "goal_attention_nodes_attention_node_id_idx",
+          "columns": [
+            {
+              "expression": "attention_node_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "goal_attention_nodes_goal_id_goals_id_fk": {
+          "name": "goal_attention_nodes_goal_id_goals_id_fk",
+          "tableFrom": "goal_attention_nodes",
+          "tableTo": "goals",
+          "columnsFrom": [
+            "goal_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "goal_attention_nodes_attention_node_id_attention_nodes_id_fk": {
+          "name": "goal_attention_nodes_attention_node_id_attention_nodes_id_fk",
+          "tableFrom": "goal_attention_nodes",
+          "tableTo": "attention_nodes",
+          "columnsFrom": [
+            "attention_node_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "goal_attention_nodes_pk": {
+          "name": "goal_attention_nodes_pk",
+          "columns": [
+            "goal_id",
+            "attention_node_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.future_identities": {
+      "name": "future_identities",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "statement": {
+          "name": "statement",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "purpose": {
+          "name": "purpose",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "future_identities_statement_length_check": {
+          "name": "future_identities_statement_length_check",
+          "value": "char_length(trim(\"future_identities\".\"statement\")) between 1 and 160"
+        },
+        "future_identities_purpose_length_check": {
+          "name": "future_identities_purpose_length_check",
+          "value": "char_length(trim(\"future_identities\".\"purpose\")) between 1 and 2000"
+        },
+        "future_identities_updated_at_check": {
+          "name": "future_identities_updated_at_check",
+          "value": "\"future_identities\".\"updated_at\" >= \"future_identities\".\"created_at\""
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.goals": {
+      "name": "goals",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "future_identity_id": {
+          "name": "future_identity_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "desired_outcome": {
+          "name": "desired_outcome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "purpose": {
+          "name": "purpose",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "goals_future_identity_id_idx": {
+          "name": "goals_future_identity_id_idx",
+          "columns": [
+            {
+              "expression": "future_identity_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "goals_future_identity_id_future_identities_id_fk": {
+          "name": "goals_future_identity_id_future_identities_id_fk",
+          "tableFrom": "goals",
+          "tableTo": "future_identities",
+          "columnsFrom": [
+            "future_identity_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "goals_desired_outcome_length_check": {
+          "name": "goals_desired_outcome_length_check",
+          "value": "char_length(trim(\"goals\".\"desired_outcome\")) between 1 and 300"
+        },
+        "goals_purpose_length_check": {
+          "name": "goals_purpose_length_check",
+          "value": "char_length(trim(\"goals\".\"purpose\")) between 1 and 2000"
+        },
+        "goals_updated_at_check": {
+          "name": "goals_updated_at_check",
+          "value": "\"goals\".\"updated_at\" >= \"goals\".\"created_at\""
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

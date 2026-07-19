@@ -2,7 +2,7 @@
 
 ## Estado actual
 
-Milestone 2A implementa dos entidades reales de Synapse: `FutureIdentity` y `Goal`.
+Milestone 2B implementa tres entidades reales de Synapse: `FutureIdentity`, `Goal` y `AttentionNode`.
 
 ## FutureIdentity implementada
 
@@ -54,16 +54,42 @@ Relacion implementada:
 - una `FutureIdentity` puede tener varias `Goal`;
 - cada `Goal` pertenece inicialmente a una sola `FutureIdentity`.
 
+## AttentionNode implementada
+
+Un area de atencion expresa donde el usuario necesita invertir atencion para avanzar en una meta concreta, sin ser todavia una tarea ni una actividad.
+
+La entidad implementada contiene:
+
+- `id`
+- `name`
+- `description`
+- `createdAt`
+- `updatedAt`
+
+Invariantes implementadas:
+
+- `id` con UUID valido.
+- `name` obligatorio, trim y maximo 100 caracteres.
+- `description` opcional, trim, normalizada a `null` si llega vacia y maximo 1000 caracteres.
+- timestamps validos.
+- `updatedAt >= createdAt`.
+
+Relaciones implementadas:
+
+- una `Goal` puede vincularse con varias `AttentionNode`;
+- una `AttentionNode` queda preparada para poder vincularse en el futuro con varias `Goal`;
+- la relacion actual se persiste en una tabla intermedia `goal_attention_nodes`.
+
 ## Flujo conceptual conocido
 
 Identidad futura -> Meta -> Nodos -> Acciones -> Avances -> Impacto -> Reflexiones -> Aprendizaje -> Evolucion
 
 ## Limites de este documento
 
-- No define agregados definitivos mas alla de `FutureIdentity` y `Goal`.
+- No define agregados definitivos mas alla de `FutureIdentity`, `Goal` y `AttentionNode`.
 - No define bounded contexts definitivos.
-- No define todavia nodos, acciones ni relaciones entre metas y nodos.
+- No define todavia acciones, progreso, conexiones nodo-nodo ni grafo visual.
 
 ## Nota explicita
 
-El modelo sigue siendo incremental. Synapse ya persiste identidades futuras y metas, pero todavia no implementa nodos, progreso, reflexiones ni estructuras mas ricas de dominio.
+El modelo sigue siendo incremental. Synapse ya persiste identidades futuras, metas y areas de atencion vinculadas a metas, pero todavia no implementa React Flow, conexiones nodo-nodo, progreso, reflexiones ni estructuras mas ricas de dominio.

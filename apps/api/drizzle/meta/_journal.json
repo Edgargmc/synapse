@@ -15,6 +15,13 @@
       "when": 1784426195648,
       "tag": "0001_small_moira_mactaggert",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784430045451,
+      "tag": "0002_youthful_zaladane",
+      "breakpoints": true
     }
   ]
 }

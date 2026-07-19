@@ -39,12 +39,28 @@ La API implementa el feature `goal` con la misma separacion por fronteras:
 
 Los puertos `Clock` e `IdGenerator` se movieron a una ubicacion comun para reutilizarse entre `future-identity` y `goal`. El `ApiExceptionFilter` global ahora distingue `400 INVALID_REQUEST`, `404 RESOURCE_NOT_FOUND` para rutas inexistentes y `500 INTERNAL_ERROR` para errores no controlados, sin exponer detalles internos.
 
+Milestone 2B agrega areas de atencion independientes y su vinculacion atomica con metas, todavia sin React Flow ni grafo visual:
+
+- `POST /goals/:goalId/attention-nodes`
+- `GET /goals/:goalId/attention-nodes`
+
+La API implementa el feature `attention-node` con la misma separacion por fronteras:
+
+- `domain`: entidad inmutable `AttentionNode` y validaciones de dominio.
+- `application`: casos de uso que verifican primero la existencia de `Goal`.
+- `infrastructure`: schemas `attention_nodes` y `goal_attention_nodes`, repositorio Drizzle y migracion incremental sobre PostgreSQL.
+- `presentation`: controller HTTP, DTOs y validacion estructural con Zod para body y params.
+
+La persistencia de `AttentionNode` usa una transaccion Drizzle real dentro del repositorio para insertar el nodo y crear su vinculacion con la meta en una sola operacion atomica. Si falla cualquiera de los inserts, PostgreSQL hace rollback y no queda un nodo huerfano. No se agrego un Unit of Work generico ni se expuso la transaccion fuera de infraestructura.
+
+En frontend, la experiencia sigue siendo un workspace unico cliente, pero se refactorizo en paneles presentacionales para identidad, meta y area de atencion. La coordinacion principal permanece centralizada, se cargan solo metas de la identidad seleccionada y solo nodos de la meta seleccionada, y se evita que respuestas viejas sobrescriban el estado actual mediante identificadores de request.
+
 ## Decisiones implementadas
 
 - Monorepo simple con `pnpm workspaces`.
 - `Next.js` con App Router, TypeScript, Tailwind CSS y ESLint.
 - `NestJS` con TypeScript y una conexion a PostgreSQL mediante `pg`.
-- `Drizzle ORM` y `Drizzle Kit` para persistencia y migraciones de `future-identity` y `goal`.
+- `Drizzle ORM` y `Drizzle Kit` para persistencia y migraciones de `future-identity`, `goal` y `attention-node`.
 - Validacion tipada de variables de entorno con `zod` en el backend.
 - `Docker Compose` solo para PostgreSQL, sin dockerizar frontend ni backend.
 

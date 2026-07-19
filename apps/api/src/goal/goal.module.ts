@@ -55,5 +55,6 @@ import { GoalController } from './presentation/goal.controller';
       inject: [FUTURE_IDENTITY_REPOSITORY, GOAL_REPOSITORY],
     },
   ],
+  exports: [GOAL_REPOSITORY],
 })
 export class GoalModule {}

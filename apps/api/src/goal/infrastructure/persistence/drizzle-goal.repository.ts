@@ -21,6 +21,23 @@ export class DrizzleGoalRepository implements GoalRepository {
     });
   }
 
+  async findById(id: string): Promise<Goal | null> {
+    const [row] = await this.db.select().from(goals).where(eq(goals.id, id)).limit(1);
+
+    if (!row) {
+      return null;
+    }
+
+    return Goal.restore({
+      id: row.id,
+      futureIdentityId: row.futureIdentityId,
+      desiredOutcome: row.desiredOutcome,
+      purpose: row.purpose,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+    });
+  }
+
   async findByFutureIdentityId(futureIdentityId: string): Promise<Goal[]> {
     const rows = await this.db
       .select()

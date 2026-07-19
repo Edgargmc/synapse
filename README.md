@@ -5,6 +5,7 @@ Synapse implementa hoy tres incrementos funcionales:
 - Milestone 0: Walking Skeleton entre navegador, frontend, API y PostgreSQL.
 - Milestone 1: creacion y listado de identidades futuras con proposito, persistidas en PostgreSQL.
 - Milestone 2A: creacion y listado de metas vinculadas a una identidad futura.
+- Milestone 2B: creacion de areas de atencion independientes y vinculacion automatica con una meta.
 
 ## Requisitos previos
 
@@ -96,6 +97,7 @@ pnpm dev:api
 - Health check: [http://localhost:3001/health](http://localhost:3001/health)
 - Future identities: [http://localhost:3001/future-identities](http://localhost:3001/future-identities)
 - Goals by identity: `http://localhost:3001/future-identities/:futureIdentityId/goals`
+- Attention nodes by goal: `http://localhost:3001/goals/:goalId/attention-nodes`
 - PostgreSQL: `localhost:5432`
 
 ## Flujo local recomendado
@@ -132,6 +134,7 @@ Estado actual de `pnpm test`:
 - Ejecuta tests automatizados reales del backend sobre `HealthService` y `HealthController`.
 - Ejecuta tests automatizados del feature `future-identity` sobre dominio, casos de uso y controller.
 - Ejecuta tests automatizados del feature `goal` sobre dominio, casos de uso y controller.
+- Ejecuta tests automatizados del feature `attention-node` sobre dominio, casos de uso y controller.
 - Ejecuta tests e2e del `ApiExceptionFilter` para JSON malformado, ruta inexistente, errores internos y `GET /health`.
 - El paquete `apps/web` todavia no tiene tests automatizados y hoy solo informa esa ausencia sin fallar.
 
@@ -155,6 +158,15 @@ Comportamiento actual del frontend frente a `goals`:
 - Permite abrir un formulario para agregar una transformacion concreta y su proposito.
 - Valida en runtime las responses de creacion, listado y error.
 - Recarga las metas despues de crear y conserva los datos tras recargar la aplicacion.
+
+Comportamiento actual del frontend frente a `attention-nodes`:
+
+- Selecciona inicialmente la primera meta disponible de la identidad activa.
+- Carga solo las areas de atencion de la meta seleccionada.
+- Permite abrir un formulario para agregar un area de atencion con `name` y `description` opcional.
+- Valida en runtime las responses de creacion, listado y error.
+- Limpia el formulario despues de crear, recarga los nodos y conserva los datos tras recargar la aplicacion.
+- Evita que respuestas viejas de metas o nodos sobrescriban la seleccion actual.
 
 ## Detener servicios
 
@@ -185,4 +197,5 @@ docker compose down -v
 - El frontend informa respuesta invalida: revisar que `GET /health` devuelva JSON valido con `status`, `services.database` y `timestamp` ISO 8601.
 - El frontend no puede guardar identidades: verificar `POST /future-identities`, la migracion aplicada y que la API este corriendo.
 - El frontend no puede guardar metas: verificar que exista una identidad seleccionada y que `POST /future-identities/:futureIdentityId/goals` responda correctamente.
+- El frontend no puede guardar areas de atencion: verificar que exista una meta seleccionada y que `POST /goals/:goalId/attention-nodes` responda correctamente.
 - `docker compose up -d` falla porque `5432` ya esta en uso: ajustar `POSTGRES_PORT` y `DATABASE_URL` en `.env` a un puerto libre, por ejemplo `5433`.

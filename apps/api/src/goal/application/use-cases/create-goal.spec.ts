@@ -33,6 +33,7 @@ describe('CreateGoal', () => {
     };
     const goalRepository: GoalRepository = {
       save: jest.fn().mockResolvedValue(undefined),
+      findById: jest.fn().mockResolvedValue(null),
       findByFutureIdentityId: jest.fn().mockResolvedValue([]),
     };
     const idGenerator: IdGenerator = {
