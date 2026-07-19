@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+.next/
+**/.next/
+dist/
+**/dist/
+build/
+**/build/
+coverage/
+**/coverage/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Version control and IDE metadata
+.git/
+.idea/
+.vscode/
+
+# Logs and temporary files
+*.log
+.DS_Store
+tmp/
+temp/
+
+# Large generated dependency file
+pnpm-lock.yaml
