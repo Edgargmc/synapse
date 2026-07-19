@@ -2,6 +2,7 @@ import { ZodError } from 'zod';
 import { NestFactory } from '@nestjs/core';
 
 import { AppModule } from './app.module';
+import { ApiExceptionFilter } from './common/presentation/http/api-exception.filter';
 import { loadEnv } from './config/env';
 
 async function bootstrap() {
@@ -12,6 +13,7 @@ async function bootstrap() {
     app.enableCors({
       origin: env.API_CORS_ORIGIN,
     });
+    app.useGlobalFilters(new ApiExceptionFilter());
 
     await app.listen(env.API_PORT);
   } catch (error) {

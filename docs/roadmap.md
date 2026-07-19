@@ -8,7 +8,7 @@ Validar la comunicacion completa entre frontend, API y PostgreSQL con una experi
 
 ## Milestone 1: Identidad futura con proposito
 
-Estado: implementado y en seguimiento.
+Estado: completado.
 
 Permitir definir la persona que el usuario quiere llegar a ser y el sentido de esa direccion.
 

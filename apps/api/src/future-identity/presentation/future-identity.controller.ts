@@ -12,6 +12,10 @@ import { ZodError } from 'zod';
 import { Response } from 'express';
 
 import {
+  internalErrorResponse,
+  invalidRequestErrorResponse,
+} from '../../common/presentation/http/api-error-response';
+import {
   CreateFutureIdentity,
   CREATE_FUTURE_IDENTITY,
 } from '../application/use-cases/create-future-identity';
@@ -52,7 +56,7 @@ export class FutureIdentityController {
 
       return toFutureIdentityResponse(identity);
     } catch (error) {
-      return this.handleError(response, error);
+      return this.handleCreateError(response, error);
     }
   }
 
@@ -67,20 +71,14 @@ export class FutureIdentityController {
         items: items.map(toFutureIdentityResponse),
       };
     } catch (error) {
-      return this.handleError(response, error);
+      return this.handleReadError(response, error);
     }
   }
 
-  private handleError(response: Response, error: unknown) {
+  private handleCreateError(response: Response, error: unknown) {
     if (error instanceof ZodError) {
       response.status(HttpStatus.BAD_REQUEST);
-      return {
-        error: {
-          code: 'INVALID_REQUEST',
-          message:
-            'El cuerpo de la solicitud no tiene el formato esperado.',
-        },
-      };
+      return invalidRequestErrorResponse();
     }
 
     if (error instanceof DomainValidationError) {
@@ -94,17 +92,20 @@ export class FutureIdentityController {
       };
     }
 
-    this.logger.error(
-      'Future identity request failed',
-      error instanceof Error ? error.stack : undefined,
-    );
+    this.logUnexpectedError('Future identity creation failed', error);
 
     response.status(HttpStatus.INTERNAL_SERVER_ERROR);
-    return {
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: 'No se pudo completar la operacion.',
-      },
-    };
+    return internalErrorResponse();
+  }
+
+  private handleReadError(response: Response, error: unknown) {
+    this.logUnexpectedError('Future identity listing failed', error);
+
+    response.status(HttpStatus.INTERNAL_SERVER_ERROR);
+    return internalErrorResponse();
+  }
+
+  private logUnexpectedError(message: string, error: unknown) {
+    this.logger.error(message, error instanceof Error ? error.stack : undefined);
   }
 }

@@ -144,6 +144,7 @@ describe('FutureIdentityController', () => {
         field: 'statement',
       },
     });
+    expect(JSON.stringify(result)).not.toContain('stack');
   });
 
   it('returns items on GET', async () => {
@@ -213,5 +214,62 @@ describe('FutureIdentityController', () => {
     expect(serialized).not.toContain('password authentication failed');
     expect(serialized).not.toContain('postgresql://');
     expect(serialized).not.toContain('synapse:synapse');
+  });
+
+  it('returns 500 for a domain validation error raised during GET', async () => {
+    const fixture = await createFixture();
+    const response = createResponse();
+    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+
+    jest.spyOn(fixture.listFutureIdentities, 'execute').mockRejectedValue(
+      new DomainValidationError(
+        'INVALID_FUTURE_IDENTITY_TIMESTAMP',
+        'La identidad futura tiene timestamps invalidos.',
+      ),
+    );
+
+    const result = await fixture.controller.findAll(response);
+    const serialized = JSON.stringify(result);
+
+    expect(response.status).toHaveBeenCalledWith(
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+    expect(result).toEqual({
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'No se pudo completar la operacion.',
+      },
+    });
+    expect(serialized).not.toContain('INVALID_FUTURE_IDENTITY_TIMESTAMP');
+    expect(serialized).not.toContain('timestamps invalidos');
+  });
+
+  it('returns 500 for a PostgreSQL or Drizzle error during GET', async () => {
+    const fixture = await createFixture();
+    const response = createResponse();
+    jest.spyOn(Logger.prototype, 'error').mockImplementation();
+
+    jest
+      .spyOn(fixture.listFutureIdentities, 'execute')
+      .mockRejectedValue(
+        new Error(
+          'syntax error at or near "select" while using postgresql://synapse:synapse@localhost:5432/synapse',
+        ),
+      );
+
+    const result = await fixture.controller.findAll(response);
+    const serialized = JSON.stringify(result);
+
+    expect(response.status).toHaveBeenCalledWith(
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+    expect(result).toEqual({
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'No se pudo completar la operacion.',
+      },
+    });
+    expect(serialized).not.toContain('syntax error at or near');
+    expect(serialized).not.toContain('postgresql://');
   });
 });
