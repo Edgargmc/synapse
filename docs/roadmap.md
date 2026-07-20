@@ -14,11 +14,11 @@ Permitir definir la persona que el usuario quiere llegar a ser y el sentido de e
 
 ## Milestone 2: Meta y nodos iniciales
 
-Estado: en progreso.
+Estado: completado.
 
-Permitir crear una meta inicial y descomponerla en nodos accionables relacionados. El milestone ya cubre metas persistidas, areas de atencion vinculadas a una meta y la proyeccion backend del grafo de evolucion. Sigue en progreso porque todavia falta React Flow y el grafo visual.
+Permitir crear una meta inicial y descomponerla en nodos accionables relacionados. El milestone ya cubre metas persistidas, areas de atencion vinculadas a una meta, la proyeccion backend del grafo de evolucion y el canvas radial interactivo en frontend.
 
-Backend Milestone 2C: completado.
+Milestone 2C: completado.
 
 ## Milestone 3: Registrar una reflexion
 

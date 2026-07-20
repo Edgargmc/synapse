@@ -51,8 +51,8 @@ export function FutureIdentityPanel({
             Defini tu direccion, tu transformacion y donde invertir atencion.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-muted sm:text-lg">
-            Milestone 2B conecta identidades futuras, metas y areas de atencion
-            persistidas, sin introducir todavia React Flow ni grafo visual.
+            Milestone 2C conecta identidades futuras, metas y areas de atencion
+            persistidas con un canvas radial basado en React Flow.
           </p>
         </div>
 

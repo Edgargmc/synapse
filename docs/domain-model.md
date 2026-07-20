@@ -100,8 +100,8 @@ Identidad futura -> Meta -> Nodos -> Acciones -> Avances -> Impacto -> Reflexion
 
 - No define agregados definitivos mas alla de `FutureIdentity`, `Goal` y `AttentionNode`.
 - No define bounded contexts definitivos.
-- No define todavia acciones, progreso, conexiones nodo-nodo ni grafo visual.
+- No define todavia acciones, progreso ni conexiones nodo-nodo.
 
 ## Nota explicita
 
-El modelo sigue siendo incremental. Synapse ya persiste identidades futuras, metas y areas de atencion vinculadas a metas, y ya expone una proyeccion backend del grafo estructural confirmado. Todavia no implementa React Flow, conexiones nodo-nodo inferidas o confirmadas, progreso, reflexiones ni estructuras mas ricas de dominio.
+El modelo sigue siendo incremental. Synapse ya persiste identidades futuras, metas y areas de atencion vinculadas a metas, expone una proyeccion backend del grafo estructural confirmado y la representa en el frontend mediante un canvas radial. Todavia no implementa conexiones nodo-nodo inferidas o confirmadas, progreso, reflexiones ni estructuras mas ricas de dominio.

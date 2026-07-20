@@ -4,6 +4,10 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import { AttentionNodePanel } from './attention-node-panel';
 import { FutureIdentityPanel } from './future-identity-panel';
+import {
+  EvolutionGraphCanvas,
+  EvolutionGraphState,
+} from './graph/evolution-graph-canvas';
 import { GoalPanel } from './goal-panel';
 import { API_BASE_URL, getApiErrorMessage, parseJson } from '../../lib/api-client';
 import {
@@ -16,6 +20,7 @@ import {
   isFutureIdentityItem,
   isFutureIdentityListResponse,
 } from '../../lib/future-identity-api';
+import { isEvolutionGraphResponse } from '../../lib/evolution-graph-api';
 import { GoalItem, isGoalItem, isGoalListResponse } from '../../lib/goal-api';
 
 type CollectionState =
@@ -67,8 +72,11 @@ export function EvolutionWorkspace() {
     useState<SubmissionState>({ kind: 'idle' });
   const [isAttentionNodeComposerOpen, setIsAttentionNodeComposerOpen] =
     useState(false);
+  const [evolutionGraphState, setEvolutionGraphState] =
+    useState<EvolutionGraphState>({ kind: 'idle' });
   const latestGoalRequestId = useRef(0);
   const latestAttentionNodeRequestId = useRef(0);
+  const latestEvolutionGraphRequestId = useRef(0);
 
   const identities =
     futureIdentityState.kind === 'ready' ? futureIdentityState.items : [];
@@ -352,6 +360,76 @@ export function EvolutionWorkspace() {
     setAttentionNodeCollectionState({ kind: 'ready', goalId, items: payload.items });
   }, []);
 
+  const loadEvolutionGraph = useCallback(async (futureIdentityId: string) => {
+    if (!API_BASE_URL) {
+      setEvolutionGraphState({
+        kind: 'error',
+        futureIdentityId,
+        message: 'Falta configurar NEXT_PUBLIC_API_BASE_URL en el entorno local.',
+      });
+      return;
+    }
+
+    const requestId = latestEvolutionGraphRequestId.current + 1;
+    latestEvolutionGraphRequestId.current = requestId;
+    setEvolutionGraphState({ kind: 'loading', futureIdentityId });
+
+    let response: Response;
+
+    try {
+      response = await fetch(
+        `${API_BASE_URL}/future-identities/${futureIdentityId}/evolution-graph`,
+        {
+          headers: {
+            Accept: 'application/json',
+          },
+          cache: 'no-store',
+        },
+      );
+    } catch {
+      if (requestId !== latestEvolutionGraphRequestId.current) {
+        return;
+      }
+
+      setEvolutionGraphState({
+        kind: 'error',
+        futureIdentityId,
+        message: 'No se pudo cargar el mapa visual de esta identidad.',
+      });
+      return;
+    }
+
+    const payload = await parseJson(response);
+
+    if (requestId !== latestEvolutionGraphRequestId.current) {
+      return;
+    }
+
+    if (!response.ok) {
+      setEvolutionGraphState({
+        kind: 'error',
+        futureIdentityId,
+        message: getApiErrorMessage(payload, 'No se pudo cargar el mapa visual.'),
+      });
+      return;
+    }
+
+    if (!isEvolutionGraphResponse(payload)) {
+      setEvolutionGraphState({
+        kind: 'error',
+        futureIdentityId,
+        message: 'La API respondio un contrato invalido para el grafo.',
+      });
+      return;
+    }
+
+    setEvolutionGraphState({
+      kind: 'ready',
+      futureIdentityId,
+      graph: payload,
+    });
+  }, []);
+
   useEffect(() => {
     void loadFutureIdentities();
   }, [loadFutureIdentities]);
@@ -359,14 +437,22 @@ export function EvolutionWorkspace() {
   useEffect(() => {
     if (!selectedFutureIdentityId) {
       latestGoalRequestId.current += 1;
+      latestEvolutionGraphRequestId.current += 1;
       setGoalCollectionState({ kind: 'idle' });
+      setEvolutionGraphState({ kind: 'idle' });
       setIsGoalComposerOpen(false);
       resetAttentionNodeFlow();
       return;
     }
 
     void loadGoals(selectedFutureIdentityId);
-  }, [loadGoals, resetAttentionNodeFlow, selectedFutureIdentityId]);
+    void loadEvolutionGraph(selectedFutureIdentityId);
+  }, [
+    loadEvolutionGraph,
+    loadGoals,
+    resetAttentionNodeFlow,
+    selectedFutureIdentityId,
+  ]);
 
   useEffect(() => {
     if (!selectedGoalId) {
@@ -501,6 +587,7 @@ export function EvolutionWorkspace() {
     setGoalDesiredOutcome('');
     setGoalPurpose('');
     await loadGoals(selectedFutureIdentityId, payload.id);
+    await loadEvolutionGraph(selectedFutureIdentityId);
     setGoalSubmissionState({
       kind: 'success',
       message: 'La transformacion se guardo correctamente.',
@@ -568,6 +655,9 @@ export function EvolutionWorkspace() {
     setAttentionNodeName('');
     setAttentionNodeDescription('');
     await loadAttentionNodes(selectedGoalId);
+    if (selectedFutureIdentityId) {
+      await loadEvolutionGraph(selectedFutureIdentityId);
+    }
     setAttentionNodeSubmissionState({
       kind: 'success',
       message: 'El area de atencion se guardo y vinculo correctamente.',
@@ -577,6 +667,7 @@ export function EvolutionWorkspace() {
   function handleSelectFutureIdentity(futureIdentityId: string) {
     latestGoalRequestId.current += 1;
     latestAttentionNodeRequestId.current += 1;
+    latestEvolutionGraphRequestId.current += 1;
     setSelectedFutureIdentityId(futureIdentityId);
     setSelectedGoalId(null);
     setGoalDesiredOutcome('');
@@ -586,6 +677,7 @@ export function EvolutionWorkspace() {
     setAttentionNodeDescription('');
     setAttentionNodeSubmissionState({ kind: 'idle' });
     setAttentionNodeCollectionState({ kind: 'idle' });
+    setEvolutionGraphState({ kind: 'loading', futureIdentityId });
     setIsAttentionNodeComposerOpen(false);
   }
 
@@ -597,61 +689,81 @@ export function EvolutionWorkspace() {
     setAttentionNodeSubmissionState({ kind: 'idle' });
   }
 
+  let visibleEvolutionGraphState: EvolutionGraphState = { kind: 'idle' };
+
+  if (evolutionGraphState.kind === 'idle') {
+    visibleEvolutionGraphState = evolutionGraphState;
+  } else if (
+    selectedFutureIdentityId &&
+    evolutionGraphState.futureIdentityId === selectedFutureIdentityId
+  ) {
+    visibleEvolutionGraphState = evolutionGraphState;
+  } else if (selectedFutureIdentityId) {
+    visibleEvolutionGraphState = {
+      kind: 'loading',
+      futureIdentityId: selectedFutureIdentityId,
+    };
+  }
+
   return (
-    <section className="grid gap-8 xl:grid-cols-[0.95fr_1.05fr]">
-      <FutureIdentityPanel
-        identityStatement={identityStatement}
-        identityPurpose={identityPurpose}
-        onStatementChange={setIdentityStatement}
-        onPurposeChange={setIdentityPurpose}
-        onSubmit={handleFutureIdentitySubmit}
-        isSubmittingIdentity={isSubmittingIdentity}
-        identitySubmissionState={identitySubmissionState}
-        futureIdentityState={futureIdentityState}
-        identities={identities}
-        selectedFutureIdentityId={selectedFutureIdentityId}
-        onSelectIdentity={handleSelectFutureIdentity}
-      />
+    <div className="grid gap-8">
+      <EvolutionGraphCanvas graphState={visibleEvolutionGraphState} />
 
-      <div className="grid gap-8">
-        <GoalPanel
-          selectedIdentity={selectedIdentity}
+      <section className="grid gap-8 xl:grid-cols-[0.95fr_1.05fr]">
+        <FutureIdentityPanel
+          identityStatement={identityStatement}
+          identityPurpose={identityPurpose}
+          onStatementChange={setIdentityStatement}
+          onPurposeChange={setIdentityPurpose}
+          onSubmit={handleFutureIdentitySubmit}
+          isSubmittingIdentity={isSubmittingIdentity}
+          identitySubmissionState={identitySubmissionState}
+          futureIdentityState={futureIdentityState}
+          identities={identities}
           selectedFutureIdentityId={selectedFutureIdentityId}
-          selectedGoalId={selectedGoalId}
-          selectedGoals={selectedGoals}
-          goalCollectionState={goalCollectionState}
-          isGoalComposerOpen={isGoalComposerOpen}
-          onToggleGoalComposer={() =>
-            setIsGoalComposerOpen((currentValue) => !currentValue)
-          }
-          goalDesiredOutcome={goalDesiredOutcome}
-          goalPurpose={goalPurpose}
-          onGoalDesiredOutcomeChange={setGoalDesiredOutcome}
-          onGoalPurposeChange={setGoalPurpose}
-          onGoalSubmit={handleGoalSubmit}
-          isSubmittingGoal={isSubmittingGoal}
-          goalSubmissionState={goalSubmissionState}
-          onSelectGoal={handleSelectGoal}
+          onSelectIdentity={handleSelectFutureIdentity}
         />
 
-        <AttentionNodePanel
-          selectedGoal={selectedGoal}
-          selectedGoalId={selectedGoalId}
-          attentionNodes={attentionNodes}
-          attentionNodeCollectionState={attentionNodeCollectionState}
-          isAttentionNodeComposerOpen={isAttentionNodeComposerOpen}
-          onToggleAttentionNodeComposer={() =>
-            setIsAttentionNodeComposerOpen((currentValue) => !currentValue)
-          }
-          attentionNodeName={attentionNodeName}
-          attentionNodeDescription={attentionNodeDescription}
-          onAttentionNodeNameChange={setAttentionNodeName}
-          onAttentionNodeDescriptionChange={setAttentionNodeDescription}
-          onAttentionNodeSubmit={handleAttentionNodeSubmit}
-          isSubmittingAttentionNode={isSubmittingAttentionNode}
-          attentionNodeSubmissionState={attentionNodeSubmissionState}
-        />
-      </div>
-    </section>
+        <div className="grid gap-8">
+          <GoalPanel
+            selectedIdentity={selectedIdentity}
+            selectedFutureIdentityId={selectedFutureIdentityId}
+            selectedGoalId={selectedGoalId}
+            selectedGoals={selectedGoals}
+            goalCollectionState={goalCollectionState}
+            isGoalComposerOpen={isGoalComposerOpen}
+            onToggleGoalComposer={() =>
+              setIsGoalComposerOpen((currentValue) => !currentValue)
+            }
+            goalDesiredOutcome={goalDesiredOutcome}
+            goalPurpose={goalPurpose}
+            onGoalDesiredOutcomeChange={setGoalDesiredOutcome}
+            onGoalPurposeChange={setGoalPurpose}
+            onGoalSubmit={handleGoalSubmit}
+            isSubmittingGoal={isSubmittingGoal}
+            goalSubmissionState={goalSubmissionState}
+            onSelectGoal={handleSelectGoal}
+          />
+
+          <AttentionNodePanel
+            selectedGoal={selectedGoal}
+            selectedGoalId={selectedGoalId}
+            attentionNodes={attentionNodes}
+            attentionNodeCollectionState={attentionNodeCollectionState}
+            isAttentionNodeComposerOpen={isAttentionNodeComposerOpen}
+            onToggleAttentionNodeComposer={() =>
+              setIsAttentionNodeComposerOpen((currentValue) => !currentValue)
+            }
+            attentionNodeName={attentionNodeName}
+            attentionNodeDescription={attentionNodeDescription}
+            onAttentionNodeNameChange={setAttentionNodeName}
+            onAttentionNodeDescriptionChange={setAttentionNodeDescription}
+            onAttentionNodeSubmit={handleAttentionNodeSubmit}
+            isSubmittingAttentionNode={isSubmittingAttentionNode}
+            attentionNodeSubmissionState={attentionNodeSubmissionState}
+          />
+        </div>
+      </section>
+    </div>
   );
 }

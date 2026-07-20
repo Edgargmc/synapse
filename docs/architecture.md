@@ -39,7 +39,7 @@ La API implementa el feature `goal` con la misma separacion por fronteras:
 
 Los puertos `Clock` e `IdGenerator` se movieron a una ubicacion comun para reutilizarse entre `future-identity` y `goal`. El `ApiExceptionFilter` global ahora distingue `400 INVALID_REQUEST`, `404 RESOURCE_NOT_FOUND` para rutas inexistentes y `500 INTERNAL_ERROR` para errores no controlados, sin exponer detalles internos.
 
-Milestone 2B agrega areas de atencion independientes y su vinculacion atomica con metas, todavia sin React Flow ni grafo visual:
+Milestone 2B agrega areas de atencion independientes y su vinculacion atomica con metas:
 
 - `POST /goals/:goalId/attention-nodes`
 - `GET /goals/:goalId/attention-nodes`
@@ -55,7 +55,7 @@ La persistencia de `AttentionNode` usa una transaccion Drizzle real dentro del r
 
 En frontend, la experiencia sigue siendo un workspace unico cliente, pero se refactorizo en paneles presentacionales para identidad, meta y area de atencion. La coordinacion principal permanece centralizada, se cargan solo metas de la identidad seleccionada y solo nodos de la meta seleccionada, y se evita que respuestas viejas sobrescriban el estado actual mediante identificadores de request.
 
-Milestone 2C agrega el modelo de lectura backend para consultar el grafo de evolucion de una identidad futura:
+Milestone 2C agrega el grafo visual radial sobre la proyeccion de lectura backend para consultar la evolucion de una identidad futura:
 
 - `GET /future-identities/:futureIdentityId/evolution-graph`
 
@@ -67,13 +67,15 @@ La API implementa el feature `evolution-graph` como una proyeccion de lectura, n
 
 El contrato devuelve nodos y relaciones estructurales confirmadas de Synapse. Es agnostico de la UI: no incluye coordenadas, estilos, colores, handles, propiedades de React Flow ni persistencia de layout.
 
+En frontend, `apps/web` consume ese contrato con validacion runtime, calcula un layout radial puro y lo adapta a `@xyflow/react` mediante un mapper visual sin fetch ni hooks. El canvas vive por encima de los paneles existentes y preserva los formularios actuales de identidad, meta y area de atencion. La carga del grafo sigue el mismo patron defensivo de request IDs que metas y nodos para evitar respuestas fuera de orden al cambiar rapidamente de identidad.
+
 ## Decisiones implementadas
 
 - Monorepo simple con `pnpm workspaces`.
 - `Next.js` con App Router, TypeScript, Tailwind CSS y ESLint.
 - `NestJS` con TypeScript y una conexion a PostgreSQL mediante `pg`.
 - `Drizzle ORM` y `Drizzle Kit` para persistencia y migraciones de `future-identity`, `goal` y `attention-node`.
-- Proyeccion de lectura `evolution-graph` para exponer el grafo estructural confirmado sin acoplarse al canvas visual.
+- Proyeccion de lectura `evolution-graph` para exponer el grafo estructural confirmado y renderizarlo en un canvas radial sin persistir layout.
 - Validacion tipada de variables de entorno con `zod` en el backend.
 - `Docker Compose` solo para PostgreSQL, sin dockerizar frontend ni backend.
 

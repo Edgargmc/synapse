@@ -135,8 +135,9 @@ Estado actual de `pnpm test`:
 - Ejecuta tests automatizados del feature `future-identity` sobre dominio, casos de uso y controller.
 - Ejecuta tests automatizados del feature `goal` sobre dominio, casos de uso y controller.
 - Ejecuta tests automatizados del feature `attention-node` sobre dominio, casos de uso y controller.
+- Ejecuta tests automatizados del feature `evolution-graph` en backend sobre query y controller.
 - Ejecuta tests e2e del `ApiExceptionFilter` para JSON malformado, ruta inexistente, errores internos y `GET /health`.
-- El paquete `apps/web` todavia no tiene tests automatizados y hoy solo informa esa ausencia sin fallar.
+- Ejecuta tests reales en `apps/web` con Vitest para validacion runtime del contrato `evolution-graph`, layout radial y mapper visual.
 
 Comportamiento actual del frontend frente a `GET /health`:
 
@@ -167,6 +168,14 @@ Comportamiento actual del frontend frente a `attention-nodes`:
 - Valida en runtime las responses de creacion, listado y error.
 - Limpia el formulario despues de crear, recarga los nodos y conserva los datos tras recargar la aplicacion.
 - Evita que respuestas viejas de metas o nodos sobrescriban la seleccion actual.
+
+Comportamiento actual del frontend frente a `evolution-graph`:
+
+- Consulta `GET /future-identities/:futureIdentityId/evolution-graph` para la identidad seleccionada.
+- Valida en runtime nodos, relaciones, UUIDs, labels, IDs duplicados y extremos de relaciones.
+- Renderiza un canvas radial con `@xyflow/react`, `Background`, `Controls`, `fitView`, zoom y drag temporal.
+- Mantiene el canvas sincronizado despues de crear metas y areas de atencion.
+- Conserva el flujo de formularios existente debajo del canvas principal.
 
 ## Detener servicios
 
