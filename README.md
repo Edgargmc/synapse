@@ -1,11 +1,28 @@
 # Synapse
 
-Synapse implementa hoy tres incrementos funcionales:
+Synapse implementa hoy cinco incrementos funcionales:
 
 - Milestone 0: Walking Skeleton entre navegador, frontend, API y PostgreSQL.
 - Milestone 1: creacion y listado de identidades futuras con proposito, persistidas en PostgreSQL.
 - Milestone 2A: creacion y listado de metas vinculadas a una identidad futura.
 - Milestone 2B: creacion de areas de atencion independientes y vinculacion automatica con una meta.
+- Milestone 2C: grafo visual radial sobre la proyeccion de lectura backend para consultar la evolucion de una identidad futura.
+
+Los incrementos funcionales son:
+
+1.  Walking Skeleton entre navegador, frontend, API y PostgreSQL.
+2.  Creacion y listado de identidades futuras con proposito, persistidas en PostgreSQL.
+3.  Creacion y listado de metas vinculadas a una identidad futura.
+4.  Creacion de areas de atencion independientes y vinculacion automatica con una meta.
+5.  Grafo visual radial sobre la proyeccion de lectura backend para consultar la evolucion de una identidad futura.
+
+Los incrementos funcionales son:
+
+1.  Walking Skeleton entre navegador, frontend, API y PostgreSQL.
+2.  Creacion y listado de identidades futuras con proposito, persistidas en PostgreSQL.
+3.  Creacion y listado de metas vinculadas a una identidad futura.
+4.  Creacion de areas de atencion independientes y vinculacion automatica con una meta.
+5.  Grafo visual radial sobre la proyeccion de lectura backend para consultar la evolucion de una identidad futura.
 
 ## Requisitos previos
 

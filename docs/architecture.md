@@ -83,11 +83,9 @@ En frontend, `apps/web` consume ese contrato con validacion runtime, calcula un 
 
 - Autenticacion.
 - Integracion con IA.
-- Grafo visual.
 - Redis, colas, mensajeria o microservicios.
 - DDD y Clean Architecture completas.
 - Librerias compartidas o capas vacias sin uso real.
-
 ## Evolucion esperada
 
 La evolucion prevista es hacia un monolito modular, manteniendo una base simple y explicitando limites cuando el dominio real aparezca. Cuando existan casos de uso y persistencia de negocio, se podra introducir una capa de acceso a datos mas rica y modulos de dominio con responsabilidades mejor separadas.

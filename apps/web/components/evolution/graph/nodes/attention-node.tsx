@@ -1,4 +1,4 @@
-import type { Node, NodeProps } from '@xyflow/react';
+import { Handle, type Node, NodeProps, Position } from '@xyflow/react';
 
 import { EvolutionGraphFlowNodeData } from '../evolution-graph.mapper';
 
@@ -36,6 +36,19 @@ export function AttentionNode({
           Sin descripcion adicional.
         </p>
       )}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Handle
+            type="target"
+            position={Position.Top}
+            style={{
+              width: 0,
+              height: 0,
+              background: 'transparent',
+              border: 'none',
+              cursor: 'default',
+            }}
+          />
+        </div>
     </article>
   );
 }

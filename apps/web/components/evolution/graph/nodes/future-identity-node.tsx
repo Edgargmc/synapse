@@ -1,4 +1,4 @@
-import type { Node, NodeProps } from '@xyflow/react';
+import { Handle, type Node, NodeProps, Position } from '@xyflow/react';
 
 import { EvolutionGraphFlowNodeData } from '../evolution-graph.mapper';
 
@@ -33,7 +33,20 @@ export function FutureIdentityNode({
         {data.description ? (
           <p className="mt-3 text-sm leading-6 text-slate-300">{data.description}</p>
         ) : null}
-      </div>
-    </article>
-  );
-}
+       </div>
+         <div className="absolute inset-0 flex items-center justify-center">
+           <Handle
+             type="source"
+             position={Position.Top}
+             style={{
+               width: 0,
+               height: 0,
+               background: 'transparent',
+               border: 'none',
+               cursor: 'default',
+             }}
+           />
+         </div>
+      </article>
+    );
+  }

@@ -8,6 +8,7 @@ import {
   type Edge,
   type Node,
   type NodeTypes,
+  useNodesState,
   useReactFlow,
 } from '@xyflow/react';
 import { useEffect, useMemo } from 'react';
@@ -92,6 +93,7 @@ export function EvolutionGraphCanvas({
   );
 }
 
+
 function GraphReadyState({ graph }: { graph: EvolutionGraphResponse }) {
   const positions = useMemo(() => buildRadialLayout(graph), [graph]);
   const { nodes, edges } = useMemo(
@@ -151,6 +153,11 @@ function GraphViewport({
       window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     [],
   );
+  const [nodesState, setNodesState, onNodesChange] = useNodesState(nodes);
+
+  useEffect(() => {
+    setNodesState(nodes);
+  }, [nodes, setNodesState]);
 
   useEffect(() => {
     void fitView({
@@ -162,7 +169,7 @@ function GraphViewport({
 
   return (
     <ReactFlow
-      nodes={nodes}
+      nodes={nodesState}
       edges={edges}
       nodeTypes={nodeTypes}
       nodesDraggable
@@ -179,7 +186,7 @@ function GraphViewport({
       colorMode="dark"
       minZoom={0.3}
       maxZoom={1.8}
-      proOptions={{ hideAttribution: true }}
+      onNodesChange={onNodesChange}
     >
       <Background color="rgba(124, 156, 255, 0.18)" gap={22} size={1.2} />
       <Controls showInteractive={false} />
