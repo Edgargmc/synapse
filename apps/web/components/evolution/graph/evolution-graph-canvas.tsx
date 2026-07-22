@@ -47,21 +47,7 @@ export function EvolutionGraphCanvas({
   graphState,
 }: EvolutionGraphCanvasProps) {
   return (
-    <section className="overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,14,34,0.96),rgba(4,8,22,0.98))] shadow-[0_30px_120px_rgba(0,0,0,0.35)]">
-      <div className="flex items-center justify-between gap-4 border-b border-white/10 px-6 py-5">
-        <div>
-          <p className="text-xs uppercase tracking-[0.34em] text-sky-200/70">
-            Evolution Graph
-          </p>
-          <h2 className="mt-2 text-2xl font-semibold text-white">
-            Mapa radial de direccion, metas y atencion
-          </h2>
-        </div>
-        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-slate-300">
-          Zoom, pan y drag habilitados
-        </span>
-      </div>
-
+    <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,14,34,0.96),rgba(4,8,22,0.98))] shadow-[0_30px_120px_rgba(0,0,0,0.35)]">
       <div className="px-6 pb-6 pt-5">
         {graphState.kind === 'idle' ? (
           <CanvasMessage
@@ -89,10 +75,9 @@ export function EvolutionGraphCanvas({
           <GraphReadyState graph={graphState.graph} />
         ) : null}
       </div>
-    </section>
+    </div>
   );
 }
-
 
 function GraphReadyState({ graph }: { graph: EvolutionGraphResponse }) {
   const positions = useMemo(() => buildRadialLayout(graph), [graph]);

@@ -74,6 +74,7 @@ export function EvolutionWorkspace() {
     useState(false);
   const [evolutionGraphState, setEvolutionGraphState] =
     useState<EvolutionGraphState>({ kind: 'idle' });
+  const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const latestGoalRequestId = useRef(0);
   const latestAttentionNodeRequestId = useRef(0);
   const latestEvolutionGraphRequestId = useRef(0);
@@ -707,9 +708,56 @@ export function EvolutionWorkspace() {
 
   return (
     <div className="grid gap-8">
-      <EvolutionGraphCanvas graphState={visibleEvolutionGraphState} />
+      {/* Barra superior con identidad seleccionada */}
+      <div className="flex items-center justify-between gap-4 border-b border-white/10 px-6 py-5">
+        <div>
+          <h1 className="text-2xl font-semibold text-white">Synapse</h1>
+          {selectedIdentity && (
+            <p className="mt-1 text-sm text-slate-300">
+              {selectedIdentity.statement}
+            </p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsInspectorOpen(!isInspectorOpen)}
+          className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 hover:bg-white/10 transition-colors"
+        >
+          {isInspectorOpen ? 'Cerrar Inspector' : 'Abrir Inspector'}
+        </button>
+      </div>
 
-      <section className="grid gap-8 xl:grid-cols-[0.95fr_1.05fr]">
+      {/* Contenido principal: canvas y/o inspector */}
+      <section
+        className={
+          isInspectorOpen
+            ? 'grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_360px]'
+            : 'grid grid-cols-1 gap-8'
+        }
+      >
+        {/* Canvas siempre presente */}
+        <EvolutionGraphCanvas graphState={visibleEvolutionGraphState} />
+
+        {/* Inspector placeholder cuando está abierto */}
+        {isInspectorOpen && (
+          <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-6">
+            <h2 className="text-lg font-semibold text-white">Inspector</h2>
+            <p className="text-sm text-slate-300">
+              Aqui se mostrara la informacion contextual del elemento seleccionado.
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsInspectorOpen(false)}
+              className="self-start rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 hover:bg-white/10 transition-colors"
+            >
+              Cerrar inspector
+            </button>
+          </div>
+        )}
+      </section>
+
+      {/* Paneles de gestion: identidad futura a la izquierda, metas y areas de atencion a la derecha en xl */}
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-[0.95fr_1.05fr]">
         <FutureIdentityPanel
           identityStatement={identityStatement}
           identityPurpose={identityPurpose}
@@ -763,7 +811,7 @@ export function EvolutionWorkspace() {
             attentionNodeSubmissionState={attentionNodeSubmissionState}
           />
         </div>
-      </section>
+      </div>
     </div>
   );
 }
