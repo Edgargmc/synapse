@@ -90,14 +90,6 @@ export function validateEvolutionGraphResponse(
     throw new Error('El grafo debe contener exactamente una identidad futura.');
   }
 
-  // Validar que haya al menos un nodo future_identity (que es el nodo central)
-  const hasFutureIdentity = validatedNodes.some(
-    (node) => node.type === 'future_identity'
-  );
-  if (!hasFutureIdentity) {
-    throw new Error('El grafo debe contener al menos la identidad futura central.');
-  }
-
   const validatedRelationships = relationships.map((relationship) => {
     if (!isObject(relationship)) {
       throw new Error('La API respondio un grafo invalido.');

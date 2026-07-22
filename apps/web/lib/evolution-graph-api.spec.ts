@@ -113,4 +113,33 @@ describe('evolution-graph-api', () => {
 
     expect(() => validateEvolutionGraphResponse(graph)).toThrow();
   });
+
+  it('rechaza grafos sin ningun nodo future_identity', () => {
+    const graph = buildGraph();
+    graph.nodes = graph.nodes.filter((node) => node.type !== 'future_identity');
+    graph.relationships = graph.relationships.filter(
+      (relationship) => relationship.from !== IDENTITY_ID
+    );
+
+    expect(() => validateEvolutionGraphResponse(graph)).toThrow(
+      'El grafo debe contener exactamente una identidad futura.'
+    );
+  });
+
+  it('rechaza grafos con dos nodos future_identity', () => {
+    const graph = buildGraph();
+    graph.nodes = [
+      ...graph.nodes,
+      {
+        id: '55555555-5555-4555-8555-555555555555',
+        type: 'future_identity',
+        label: 'Segunda identidad futura',
+        description: null,
+      },
+    ];
+
+    expect(() => validateEvolutionGraphResponse(graph)).toThrow(
+      'El grafo debe contener exactamente una identidad futura.'
+    );
+  });
 });
