@@ -113,7 +113,7 @@ function GraphReadyState({ graph }: { graph: EvolutionGraphResponse }) {
         ) : null}
       </div>
 
-      <div className="h-[56vh] min-h-[480px] overflow-hidden rounded-[1.6rem] border border-white/10 bg-[radial-gradient(circle_at_center,rgba(48,80,160,0.18),transparent_35%),linear-gradient(180deg,rgba(5,8,20,0.82),rgba(2,4,12,0.98))]">
+      <div className="h-[56vh] min-h-[480px] lg:min-h-[620px] overflow-hidden rounded-[1.6rem] border border-white/10 bg-[radial-gradient(circle_at_center,rgba(48,80,160,0.18),transparent_35%),linear-gradient(180deg,rgba(5,8,20,0.82),rgba(2,4,12,0.98))]">
         <ReactFlowProvider>
           <GraphViewport graphKey={graphKey} nodes={nodes} edges={edges} />
         </ReactFlowProvider>
