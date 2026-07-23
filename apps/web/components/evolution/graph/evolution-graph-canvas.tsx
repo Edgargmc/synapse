@@ -13,7 +13,10 @@ import {
 } from '@xyflow/react';
 import { useEffect, useMemo } from 'react';
 
-import { EvolutionGraphResponse } from '../../../lib/evolution-graph-api';
+import {
+  EvolutionGraphNodeType,
+  EvolutionGraphResponse,
+} from '../../../lib/evolution-graph-api';
 import {
   mapEvolutionGraphToFlowElements,
   type EvolutionGraphFlowNodeData,
@@ -33,6 +36,13 @@ export type EvolutionGraphState =
       graph: EvolutionGraphResponse;
     };
 
+export type EvolutionGraphSelection = {
+  id: string;
+  label: string;
+  description: string | null;
+  kind: EvolutionGraphNodeType;
+};
+
 const nodeTypes: NodeTypes = {
   future_identity: FutureIdentityNode,
   goal: GoalNode,
@@ -41,10 +51,12 @@ const nodeTypes: NodeTypes = {
 
 type EvolutionGraphCanvasProps = {
   graphState: EvolutionGraphState;
+  onNodeSelectionChange: (selection: EvolutionGraphSelection | null) => void;
 };
 
 export function EvolutionGraphCanvas({
   graphState,
+  onNodeSelectionChange,
 }: EvolutionGraphCanvasProps) {
   return (
     <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(10,14,34,0.96),rgba(4,8,22,0.98))] shadow-[0_30px_120px_rgba(0,0,0,0.35)]">
@@ -72,14 +84,23 @@ export function EvolutionGraphCanvas({
         ) : null}
 
         {graphState.kind === 'ready' ? (
-          <GraphReadyState graph={graphState.graph} />
+          <GraphReadyState
+            graph={graphState.graph}
+            onNodeSelectionChange={onNodeSelectionChange}
+          />
         ) : null}
       </div>
     </div>
   );
 }
 
-function GraphReadyState({ graph }: { graph: EvolutionGraphResponse }) {
+function GraphReadyState({
+  graph,
+  onNodeSelectionChange,
+}: {
+  graph: EvolutionGraphResponse;
+  onNodeSelectionChange: (selection: EvolutionGraphSelection | null) => void;
+}) {
   const positions = useMemo(() => buildRadialLayout(graph), [graph]);
   const { nodes, edges } = useMemo(
     () => mapEvolutionGraphToFlowElements(graph, positions),
@@ -115,7 +136,12 @@ function GraphReadyState({ graph }: { graph: EvolutionGraphResponse }) {
 
       <div className="h-[56vh] min-h-[480px] lg:min-h-[620px] overflow-hidden rounded-[1.6rem] border border-white/10 bg-[radial-gradient(circle_at_center,rgba(48,80,160,0.18),transparent_35%),linear-gradient(180deg,rgba(5,8,20,0.82),rgba(2,4,12,0.98))]">
         <ReactFlowProvider>
-          <GraphViewport graphKey={graphKey} nodes={nodes} edges={edges} />
+          <GraphViewport
+            graphKey={graphKey}
+            nodes={nodes}
+            edges={edges}
+            onNodeSelectionChange={onNodeSelectionChange}
+          />
         </ReactFlowProvider>
       </div>
     </div>
@@ -126,10 +152,12 @@ function GraphViewport({
   graphKey,
   nodes,
   edges,
+  onNodeSelectionChange,
 }: {
   graphKey: string;
   nodes: Array<Node<EvolutionGraphFlowNodeData>>;
   edges: Edge[];
+  onNodeSelectionChange: (selection: EvolutionGraphSelection | null) => void;
 }) {
   const { fitView } = useReactFlow();
   const prefersReducedMotion = useMemo(
@@ -172,6 +200,15 @@ function GraphViewport({
       minZoom={0.3}
       maxZoom={1.8}
       onNodesChange={onNodesChange}
+      onNodeClick={(_, node) => {
+        onNodeSelectionChange({
+          id: node.id,
+          label: node.data.label,
+          description: node.data.description,
+          kind: node.data.kind,
+        });
+      }}
+      onPaneClick={() => onNodeSelectionChange(null)}
     >
       <Background color="rgba(124, 156, 255, 0.18)" gap={22} size={1.2} />
       <Controls showInteractive={false} />

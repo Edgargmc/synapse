@@ -6,6 +6,7 @@ import { AttentionNodePanel } from './attention-node-panel';
 import { FutureIdentityPanel } from './future-identity-panel';
 import {
   EvolutionGraphCanvas,
+  EvolutionGraphSelection,
   EvolutionGraphState,
 } from './graph/evolution-graph-canvas';
 import { GoalPanel } from './goal-panel';
@@ -74,6 +75,8 @@ export function EvolutionWorkspace() {
     useState(false);
   const [evolutionGraphState, setEvolutionGraphState] =
     useState<EvolutionGraphState>({ kind: 'idle' });
+  const [evolutionGraphSelection, setEvolutionGraphSelection] =
+    useState<EvolutionGraphSelection | null>(null);
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const latestGoalRequestId = useRef(0);
   const latestAttentionNodeRequestId = useRef(0);
@@ -670,6 +673,7 @@ export function EvolutionWorkspace() {
     latestAttentionNodeRequestId.current += 1;
     latestEvolutionGraphRequestId.current += 1;
     setSelectedFutureIdentityId(futureIdentityId);
+    setEvolutionGraphSelection(null);
     setSelectedGoalId(null);
     setGoalDesiredOutcome('');
     setGoalPurpose('');
@@ -736,15 +740,49 @@ export function EvolutionWorkspace() {
         }
       >
         {/* Canvas siempre presente */}
-        <EvolutionGraphCanvas graphState={visibleEvolutionGraphState} />
+        <EvolutionGraphCanvas
+          graphState={visibleEvolutionGraphState}
+          onNodeSelectionChange={(selection) => {
+            setEvolutionGraphSelection(selection);
+            if (selection) {
+              setIsInspectorOpen(true);
+            }
+          }}
+        />
 
-        {/* Inspector placeholder cuando está abierto */}
         {isInspectorOpen && (
           <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-6">
             <h2 className="text-lg font-semibold text-white">Inspector</h2>
-            <p className="text-sm text-slate-300">
-              Aqui se mostrara la informacion contextual del elemento seleccionado.
-            </p>
+            {evolutionGraphSelection ? (
+              <>
+                <span className="self-start rounded-full border border-sky-300/25 bg-sky-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-sky-100">
+                  {getEvolutionGraphNodeKindLabel(evolutionGraphSelection.kind)}
+                </span>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                    Nombre
+                  </p>
+                  <p className="mt-1 text-base font-semibold text-white">
+                    {evolutionGraphSelection.label}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                    Descripción o propósito
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-slate-300">
+                    {evolutionGraphSelection.description ?? 'Sin descripción adicional'}
+                  </p>
+                </div>
+                <p className="text-xs break-all text-slate-500">
+                  ID: {evolutionGraphSelection.id}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-slate-300">
+                Selecciona un elemento del mapa para ver su información.
+              </p>
+            )}
             <button
               type="button"
               onClick={() => setIsInspectorOpen(false)}
@@ -814,4 +852,16 @@ export function EvolutionWorkspace() {
       </div>
     </div>
   );
+}
+
+function getEvolutionGraphNodeKindLabel(
+  kind: EvolutionGraphSelection['kind'],
+) {
+  const labels: Record<EvolutionGraphSelection['kind'], string> = {
+    future_identity: 'Identidad futura',
+    goal: 'Meta',
+    attention_node: 'Nodo de atención',
+  };
+
+  return labels[kind];
 }
