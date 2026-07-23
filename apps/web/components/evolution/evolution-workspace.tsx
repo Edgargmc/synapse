@@ -11,6 +11,7 @@ import {
   EvolutionGraphState,
 } from './graph/evolution-graph-canvas';
 import { GoalPanel } from './goal-panel';
+import { GoalComposer } from './goal-composer';
 import { API_BASE_URL, getApiErrorMessage, parseJson } from '../../lib/api-client';
 import {
   AttentionNodeItem,
@@ -51,7 +52,8 @@ type SubmissionState =
 type InspectorMode =
   | { kind: 'empty' }
   | { kind: 'details'; selection: EvolutionGraphSelection }
-  | { kind: 'create_future_identity' };
+  | { kind: 'create_future_identity' }
+  | { kind: 'create_goal'; futureIdentityId: string };
 
 export function EvolutionWorkspace() {
   const [identityStatement, setIdentityStatement] = useState('');
@@ -70,7 +72,6 @@ export function EvolutionWorkspace() {
   const [goalSubmissionState, setGoalSubmissionState] =
     useState<SubmissionState>({ kind: 'idle' });
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
-  const [isGoalComposerOpen, setIsGoalComposerOpen] = useState(false);
   const [attentionNodeName, setAttentionNodeName] = useState('');
   const [attentionNodeDescription, setAttentionNodeDescription] = useState('');
   const [attentionNodeCollectionState, setAttentionNodeCollectionState] =
@@ -128,7 +129,6 @@ export function EvolutionWorkspace() {
           setGoalPurpose('');
           setGoalSubmissionState({ kind: 'idle' });
           setGoalCollectionState({ kind: 'idle' });
-          setIsGoalComposerOpen(false);
           resetAttentionNodeFlow();
           return null;
         }
@@ -451,7 +451,6 @@ export function EvolutionWorkspace() {
       latestEvolutionGraphRequestId.current += 1;
       setGoalCollectionState({ kind: 'idle' });
       setEvolutionGraphState({ kind: 'idle' });
-      setIsGoalComposerOpen(false);
       resetAttentionNodeFlow();
       return;
     }
@@ -560,13 +559,24 @@ export function EvolutionWorkspace() {
       return;
     }
 
+    const futureIdentityId = selectedFutureIdentityId;
+
+    if (
+      inspectorMode.kind !== 'create_goal' ||
+      inspectorMode.futureIdentityId !== futureIdentityId ||
+      selectedIdentity?.id !== futureIdentityId
+    ) {
+      setInspectorMode({ kind: 'empty' });
+      return;
+    }
+
     setGoalSubmissionState({ kind: 'submitting' });
 
     let response: Response;
 
     try {
       response = await fetch(
-        `${API_BASE_URL}/future-identities/${selectedFutureIdentityId}/goals`,
+        `${API_BASE_URL}/future-identities/${futureIdentityId}/goals`,
         {
           method: 'POST',
           headers: {
@@ -607,13 +617,23 @@ export function EvolutionWorkspace() {
 
     setGoalDesiredOutcome('');
     setGoalPurpose('');
-    await loadGoals(selectedFutureIdentityId, payload.id);
-    await loadEvolutionGraph(selectedFutureIdentityId);
+    await loadGoals(futureIdentityId, payload.id);
+    await loadEvolutionGraph(futureIdentityId);
     setGoalSubmissionState({
       kind: 'success',
       message: 'La transformacion se guardo correctamente.',
     });
     setIsAttentionNodeComposerOpen(false);
+    setInspectorMode({
+      kind: 'details',
+      selection: {
+        id: payload.id,
+        label: payload.desiredOutcome,
+        description: payload.purpose,
+        kind: 'goal',
+      },
+    });
+    setIsInspectorOpen(true);
   }
 
   async function handleAttentionNodeSubmit(event: FormEvent<HTMLFormElement>) {
@@ -691,7 +711,9 @@ export function EvolutionWorkspace() {
     latestEvolutionGraphRequestId.current += 1;
     setSelectedFutureIdentityId(futureIdentityId);
     setInspectorMode((currentMode) =>
-      currentMode.kind === 'details' ? { kind: 'empty' } : currentMode,
+      currentMode.kind === 'details' || currentMode.kind === 'create_goal'
+        ? { kind: 'empty' }
+        : currentMode,
     );
     setSelectedGoalId(null);
     setGoalDesiredOutcome('');
@@ -759,6 +781,25 @@ export function EvolutionWorkspace() {
         >
           Nueva identidad
         </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (!selectedFutureIdentityId || !selectedIdentity) {
+              return;
+            }
+
+            setInspectorMode({
+              kind: 'create_goal',
+              futureIdentityId: selectedFutureIdentityId,
+            });
+            setGoalSubmissionState({ kind: 'idle' });
+            setIsInspectorOpen(true);
+          }}
+          disabled={!selectedFutureIdentityId || !selectedIdentity}
+          className="rounded-full border border-accent/40 bg-accentSoft px-4 py-2 text-sm font-semibold text-accent transition hover:border-accent disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Nueva meta
+        </button>
       </div>
 
       {/* Contenido principal: canvas y/o inspector */}
@@ -788,6 +829,8 @@ export function EvolutionWorkspace() {
             <h2 className="text-lg font-semibold text-white">
               {inspectorMode.kind === 'create_future_identity'
                 ? 'Nueva identidad futura'
+                : inspectorMode.kind === 'create_goal'
+                  ? 'Nueva meta'
                 : 'Inspector'}
             </h2>
             {inspectorMode.kind === 'details' ? (
@@ -839,6 +882,36 @@ export function EvolutionWorkspace() {
                   Cancelar
                 </button>
               </>
+            ) :
+              inspectorMode.kind === 'create_goal' &&
+              selectedIdentity?.id === inspectorMode.futureIdentityId ? (
+              <>
+                <p className="text-sm text-slate-300">
+                  Para: {selectedIdentity.statement}
+                </p>
+                <GoalComposer
+                  selectedIdentity={selectedIdentity}
+                  goalDesiredOutcome={goalDesiredOutcome}
+                  goalPurpose={goalPurpose}
+                  onGoalDesiredOutcomeChange={setGoalDesiredOutcome}
+                  onGoalPurposeChange={setGoalPurpose}
+                  onSubmit={handleGoalSubmit}
+                  isSubmittingGoal={isSubmittingGoal}
+                  goalSubmissionState={goalSubmissionState}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGoalDesiredOutcome('');
+                    setGoalPurpose('');
+                    setGoalSubmissionState({ kind: 'idle' });
+                    setInspectorMode({ kind: 'empty' });
+                  }}
+                  className="self-start rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 hover:bg-white/10 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </>
             ) : (
               <p className="text-sm text-slate-300">
                 Selecciona un elemento del mapa para ver su información.
@@ -871,17 +944,6 @@ export function EvolutionWorkspace() {
             selectedGoalId={selectedGoalId}
             selectedGoals={selectedGoals}
             goalCollectionState={goalCollectionState}
-            isGoalComposerOpen={isGoalComposerOpen}
-            onToggleGoalComposer={() =>
-              setIsGoalComposerOpen((currentValue) => !currentValue)
-            }
-            goalDesiredOutcome={goalDesiredOutcome}
-            goalPurpose={goalPurpose}
-            onGoalDesiredOutcomeChange={setGoalDesiredOutcome}
-            onGoalPurposeChange={setGoalPurpose}
-            onGoalSubmit={handleGoalSubmit}
-            isSubmittingGoal={isSubmittingGoal}
-            goalSubmissionState={goalSubmissionState}
             onSelectGoal={handleSelectGoal}
           />
 
