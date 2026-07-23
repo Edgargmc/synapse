@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import { AttentionNodePanel } from './attention-node-panel';
+import { FutureIdentityComposer } from './future-identity-composer';
 import { FutureIdentityPanel } from './future-identity-panel';
 import {
   EvolutionGraphCanvas,
@@ -47,6 +48,11 @@ type SubmissionState =
   | { kind: 'success'; message: string }
   | { kind: 'error'; message: string };
 
+type InspectorMode =
+  | { kind: 'empty' }
+  | { kind: 'details'; selection: EvolutionGraphSelection }
+  | { kind: 'create_future_identity' };
+
 export function EvolutionWorkspace() {
   const [identityStatement, setIdentityStatement] = useState('');
   const [identityPurpose, setIdentityPurpose] = useState('');
@@ -75,8 +81,9 @@ export function EvolutionWorkspace() {
     useState(false);
   const [evolutionGraphState, setEvolutionGraphState] =
     useState<EvolutionGraphState>({ kind: 'idle' });
-  const [evolutionGraphSelection, setEvolutionGraphSelection] =
-    useState<EvolutionGraphSelection | null>(null);
+  const [inspectorMode, setInspectorMode] = useState<InspectorMode>({
+    kind: 'empty',
+  });
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const latestGoalRequestId = useRef(0);
   const latestAttentionNodeRequestId = useRef(0);
@@ -525,11 +532,21 @@ export function EvolutionWorkspace() {
     setIdentityStatement('');
     setIdentityPurpose('');
     await loadFutureIdentities(payload.id);
+    await loadEvolutionGraph(payload.id);
     setIdentitySubmissionState({
       kind: 'success',
       message: 'La identidad futura se guardo correctamente.',
     });
-    setIsGoalComposerOpen(true);
+    setInspectorMode({
+      kind: 'details',
+      selection: {
+        id: payload.id,
+        label: payload.statement,
+        description: payload.purpose,
+        kind: 'future_identity',
+      },
+    });
+    setIsInspectorOpen(true);
   }
 
   async function handleGoalSubmit(event: FormEvent<HTMLFormElement>) {
@@ -673,7 +690,9 @@ export function EvolutionWorkspace() {
     latestAttentionNodeRequestId.current += 1;
     latestEvolutionGraphRequestId.current += 1;
     setSelectedFutureIdentityId(futureIdentityId);
-    setEvolutionGraphSelection(null);
+    setInspectorMode((currentMode) =>
+      currentMode.kind === 'details' ? { kind: 'empty' } : currentMode,
+    );
     setSelectedGoalId(null);
     setGoalDesiredOutcome('');
     setGoalPurpose('');
@@ -729,6 +748,17 @@ export function EvolutionWorkspace() {
         >
           {isInspectorOpen ? 'Cerrar Inspector' : 'Abrir Inspector'}
         </button>
+        <button
+          type="button"
+          onClick={() => {
+            setInspectorMode({ kind: 'create_future_identity' });
+            setIdentitySubmissionState({ kind: 'idle' });
+            setIsInspectorOpen(true);
+          }}
+          className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-background transition hover:opacity-90"
+        >
+          Nueva identidad
+        </button>
       </div>
 
       {/* Contenido principal: canvas y/o inspector */}
@@ -743,27 +773,34 @@ export function EvolutionWorkspace() {
         <EvolutionGraphCanvas
           graphState={visibleEvolutionGraphState}
           onNodeSelectionChange={(selection) => {
-            setEvolutionGraphSelection(selection);
             if (selection) {
+              setInspectorMode({ kind: 'details', selection });
               setIsInspectorOpen(true);
+              return;
             }
+
+            setInspectorMode({ kind: 'empty' });
           }}
         />
 
         {isInspectorOpen && (
           <div className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-6">
-            <h2 className="text-lg font-semibold text-white">Inspector</h2>
-            {evolutionGraphSelection ? (
+            <h2 className="text-lg font-semibold text-white">
+              {inspectorMode.kind === 'create_future_identity'
+                ? 'Nueva identidad futura'
+                : 'Inspector'}
+            </h2>
+            {inspectorMode.kind === 'details' ? (
               <>
                 <span className="self-start rounded-full border border-sky-300/25 bg-sky-400/10 px-3 py-1 text-xs uppercase tracking-[0.18em] text-sky-100">
-                  {getEvolutionGraphNodeKindLabel(evolutionGraphSelection.kind)}
+                  {getEvolutionGraphNodeKindLabel(inspectorMode.selection.kind)}
                 </span>
                 <div>
                   <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
                     Nombre
                   </p>
                   <p className="mt-1 text-base font-semibold text-white">
-                    {evolutionGraphSelection.label}
+                    {inspectorMode.selection.label}
                   </p>
                 </div>
                 <div>
@@ -771,12 +808,36 @@ export function EvolutionWorkspace() {
                     Descripción o propósito
                   </p>
                   <p className="mt-1 text-sm leading-6 text-slate-300">
-                    {evolutionGraphSelection.description ?? 'Sin descripción adicional'}
+                    {inspectorMode.selection.description ?? 'Sin descripción adicional'}
                   </p>
                 </div>
                 <p className="text-xs break-all text-slate-500">
-                  ID: {evolutionGraphSelection.id}
+                  ID: {inspectorMode.selection.id}
                 </p>
+              </>
+            ) : inspectorMode.kind === 'create_future_identity' ? (
+              <>
+                <FutureIdentityComposer
+                  identityStatement={identityStatement}
+                  identityPurpose={identityPurpose}
+                  onStatementChange={setIdentityStatement}
+                  onPurposeChange={setIdentityPurpose}
+                  onSubmit={handleFutureIdentitySubmit}
+                  isSubmittingIdentity={isSubmittingIdentity}
+                  identitySubmissionState={identitySubmissionState}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIdentityStatement('');
+                    setIdentityPurpose('');
+                    setIdentitySubmissionState({ kind: 'idle' });
+                    setInspectorMode({ kind: 'empty' });
+                  }}
+                  className="self-start rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 hover:bg-white/10 transition-colors"
+                >
+                  Cancelar
+                </button>
               </>
             ) : (
               <p className="text-sm text-slate-300">
@@ -797,13 +858,6 @@ export function EvolutionWorkspace() {
       {/* Paneles de gestion: identidad futura a la izquierda, metas y areas de atencion a la derecha en xl */}
       <div className="grid grid-cols-1 gap-8 xl:grid-cols-[0.95fr_1.05fr]">
         <FutureIdentityPanel
-          identityStatement={identityStatement}
-          identityPurpose={identityPurpose}
-          onStatementChange={setIdentityStatement}
-          onPurposeChange={setIdentityPurpose}
-          onSubmit={handleFutureIdentitySubmit}
-          isSubmittingIdentity={isSubmittingIdentity}
-          identitySubmissionState={identitySubmissionState}
           futureIdentityState={futureIdentityState}
           identities={identities}
           selectedFutureIdentityId={selectedFutureIdentityId}
