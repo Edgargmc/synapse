@@ -3,6 +3,7 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 
 import { AttentionNodePanel } from './attention-node-panel';
+import { AttentionNodeComposer } from './attention-node-composer';
 import { FutureIdentityComposer } from './future-identity-composer';
 import { FutureIdentityPanel } from './future-identity-panel';
 import {
@@ -53,7 +54,8 @@ type InspectorMode =
   | { kind: 'empty' }
   | { kind: 'details'; selection: EvolutionGraphSelection }
   | { kind: 'create_future_identity' }
-  | { kind: 'create_goal'; futureIdentityId: string };
+  | { kind: 'create_goal'; futureIdentityId: string }
+  | { kind: 'create_attention_node'; goalId: string };
 
 export function EvolutionWorkspace() {
   const [identityStatement, setIdentityStatement] = useState('');
@@ -78,8 +80,6 @@ export function EvolutionWorkspace() {
     useState<AttentionNodeCollectionState>({ kind: 'idle' });
   const [attentionNodeSubmissionState, setAttentionNodeSubmissionState] =
     useState<SubmissionState>({ kind: 'idle' });
-  const [isAttentionNodeComposerOpen, setIsAttentionNodeComposerOpen] =
-    useState(false);
   const [evolutionGraphState, setEvolutionGraphState] =
     useState<EvolutionGraphState>({ kind: 'idle' });
   const [inspectorMode, setInspectorMode] = useState<InspectorMode>({
@@ -118,7 +118,6 @@ export function EvolutionWorkspace() {
     setAttentionNodeDescription('');
     setAttentionNodeSubmissionState({ kind: 'idle' });
     setAttentionNodeCollectionState({ kind: 'idle' });
-    setIsAttentionNodeComposerOpen(false);
   }, []);
 
   const syncSelectedFutureIdentity = useCallback(
@@ -161,7 +160,6 @@ export function EvolutionWorkspace() {
           setAttentionNodeName('');
           setAttentionNodeDescription('');
           setAttentionNodeSubmissionState({ kind: 'idle' });
-          setIsAttentionNodeComposerOpen(false);
           return null;
         }
 
@@ -468,7 +466,6 @@ export function EvolutionWorkspace() {
     if (!selectedGoalId) {
       latestAttentionNodeRequestId.current += 1;
       setAttentionNodeCollectionState({ kind: 'idle' });
-      setIsAttentionNodeComposerOpen(false);
       return;
     }
 
@@ -623,7 +620,6 @@ export function EvolutionWorkspace() {
       kind: 'success',
       message: 'La transformacion se guardo correctamente.',
     });
-    setIsAttentionNodeComposerOpen(false);
     setInspectorMode({
       kind: 'details',
       selection: {
@@ -647,12 +643,25 @@ export function EvolutionWorkspace() {
       return;
     }
 
+    const goalId = selectedGoalId;
+
+    if (
+      inspectorMode.kind !== 'create_attention_node' ||
+      inspectorMode.goalId !== goalId ||
+      selectedGoal?.id !== goalId
+    ) {
+      setInspectorMode({ kind: 'empty' });
+      return;
+    }
+
+    const futureIdentityId = selectedFutureIdentityId;
+
     setAttentionNodeSubmissionState({ kind: 'submitting' });
 
     let response: Response;
 
     try {
-      response = await fetch(`${API_BASE_URL}/goals/${selectedGoalId}/attention-nodes`, {
+      response = await fetch(`${API_BASE_URL}/goals/${goalId}/attention-nodes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -695,14 +704,24 @@ export function EvolutionWorkspace() {
 
     setAttentionNodeName('');
     setAttentionNodeDescription('');
-    await loadAttentionNodes(selectedGoalId);
-    if (selectedFutureIdentityId) {
-      await loadEvolutionGraph(selectedFutureIdentityId);
+    await loadAttentionNodes(goalId);
+    if (futureIdentityId) {
+      await loadEvolutionGraph(futureIdentityId);
     }
     setAttentionNodeSubmissionState({
       kind: 'success',
       message: 'El area de atencion se guardo y vinculo correctamente.',
     });
+    setInspectorMode({
+      kind: 'details',
+      selection: {
+        id: payload.id,
+        label: payload.name,
+        description: payload.description,
+        kind: 'attention_node',
+      },
+    });
+    setIsInspectorOpen(true);
   }
 
   function handleSelectFutureIdentity(futureIdentityId: string) {
@@ -711,7 +730,9 @@ export function EvolutionWorkspace() {
     latestEvolutionGraphRequestId.current += 1;
     setSelectedFutureIdentityId(futureIdentityId);
     setInspectorMode((currentMode) =>
-      currentMode.kind === 'details' || currentMode.kind === 'create_goal'
+      currentMode.kind === 'details' ||
+      currentMode.kind === 'create_goal' ||
+      currentMode.kind === 'create_attention_node'
         ? { kind: 'empty' }
         : currentMode,
     );
@@ -724,12 +745,16 @@ export function EvolutionWorkspace() {
     setAttentionNodeSubmissionState({ kind: 'idle' });
     setAttentionNodeCollectionState({ kind: 'idle' });
     setEvolutionGraphState({ kind: 'loading', futureIdentityId });
-    setIsAttentionNodeComposerOpen(false);
   }
 
   function handleSelectGoal(goalId: string) {
     latestAttentionNodeRequestId.current += 1;
     setSelectedGoalId(goalId);
+    setInspectorMode((currentMode) =>
+      currentMode.kind === 'details' || currentMode.kind === 'create_attention_node'
+        ? { kind: 'empty' }
+        : currentMode,
+    );
     setAttentionNodeName('');
     setAttentionNodeDescription('');
     setAttentionNodeSubmissionState({ kind: 'idle' });
@@ -800,6 +825,25 @@ export function EvolutionWorkspace() {
         >
           Nueva meta
         </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (!selectedGoalId || !selectedGoal) {
+              return;
+            }
+
+            setInspectorMode({
+              kind: 'create_attention_node',
+              goalId: selectedGoalId,
+            });
+            setAttentionNodeSubmissionState({ kind: 'idle' });
+            setIsInspectorOpen(true);
+          }}
+          disabled={!selectedGoalId || !selectedGoal}
+          className="rounded-full border border-accent/40 bg-accentSoft px-4 py-2 text-sm font-semibold text-accent transition hover:border-accent disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Nueva área
+        </button>
       </div>
 
       {/* Contenido principal: canvas y/o inspector */}
@@ -831,6 +875,8 @@ export function EvolutionWorkspace() {
                 ? 'Nueva identidad futura'
                 : inspectorMode.kind === 'create_goal'
                   ? 'Nueva meta'
+                  : inspectorMode.kind === 'create_attention_node'
+                    ? 'Nueva área de atención'
                 : 'Inspector'}
             </h2>
             {inspectorMode.kind === 'details' ? (
@@ -912,6 +958,36 @@ export function EvolutionWorkspace() {
                   Cancelar
                 </button>
               </>
+            ) :
+              inspectorMode.kind === 'create_attention_node' &&
+              selectedGoal?.id === inspectorMode.goalId ? (
+              <>
+                <p className="text-sm text-slate-300">
+                  Para la meta: {selectedGoal.desiredOutcome}
+                </p>
+                <AttentionNodeComposer
+                  selectedGoal={selectedGoal}
+                  attentionNodeName={attentionNodeName}
+                  attentionNodeDescription={attentionNodeDescription}
+                  onAttentionNodeNameChange={setAttentionNodeName}
+                  onAttentionNodeDescriptionChange={setAttentionNodeDescription}
+                  onSubmit={handleAttentionNodeSubmit}
+                  isSubmittingAttentionNode={isSubmittingAttentionNode}
+                  attentionNodeSubmissionState={attentionNodeSubmissionState}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAttentionNodeName('');
+                    setAttentionNodeDescription('');
+                    setAttentionNodeSubmissionState({ kind: 'idle' });
+                    setInspectorMode({ kind: 'empty' });
+                  }}
+                  className="self-start rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 hover:bg-white/10 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </>
             ) : (
               <p className="text-sm text-slate-300">
                 Selecciona un elemento del mapa para ver su información.
@@ -952,17 +1028,6 @@ export function EvolutionWorkspace() {
             selectedGoalId={selectedGoalId}
             attentionNodes={attentionNodes}
             attentionNodeCollectionState={attentionNodeCollectionState}
-            isAttentionNodeComposerOpen={isAttentionNodeComposerOpen}
-            onToggleAttentionNodeComposer={() =>
-              setIsAttentionNodeComposerOpen((currentValue) => !currentValue)
-            }
-            attentionNodeName={attentionNodeName}
-            attentionNodeDescription={attentionNodeDescription}
-            onAttentionNodeNameChange={setAttentionNodeName}
-            onAttentionNodeDescriptionChange={setAttentionNodeDescription}
-            onAttentionNodeSubmit={handleAttentionNodeSubmit}
-            isSubmittingAttentionNode={isSubmittingAttentionNode}
-            attentionNodeSubmissionState={attentionNodeSubmissionState}
           />
         </div>
       </div>
